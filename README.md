@@ -84,5 +84,5 @@ git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
 
 * [managing-your-dotfiles](https://www.anishathalye.com/2014/08/03/managing-your-dotfiles/)
 * [mathiasbynens](https://github.com/mathiasbynens/dotfiles)
-* [anishathalye](https://github.com/anishathalye/dotbot)
+* [anishathalye](https://github.com/anishathalye/dotfiles)
 * [jorisnoo](https://github.com/jorisnoo/dotfiles)
