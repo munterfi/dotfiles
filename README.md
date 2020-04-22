@@ -74,6 +74,10 @@ Avoid `brew cask install <PKG>`, install manually:
 * QGIS
 
 ## Arch Linux
+
+Some paths have to be adjusted (e.g. julia) and some macOS specific alias should be commented out.
+Check the files manually before linking. Hint: Use `en_DK.UTF-8` in `.zsh/zshenv.zsh`.
+
 ```sh
 pacman -S base-devel zsh git vim geos gdal proj r julia
 git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
