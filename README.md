@@ -7,7 +7,7 @@ git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
 ```
 
 ## macOS setup
-Set up MBP on Catalina.
+Set up on macOS Catalina.
 
 ### homebrew
 
@@ -19,7 +19,7 @@ Set up MBP on Catalina.
 brew update;brew upgrade;brew update;brew upgrade
 
 # Packages
-brew coreutils
+brew install coreutils
 brew install pkg-config
 brew install grep
 brew install wget
