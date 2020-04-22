@@ -2,10 +2,6 @@
 
 ### Functions
 
-# git features
-function fstart() { git checkout -b feature/$* develop }
-function ffinish() { (git checkout develop && git merge --no-ff feature/$* && git branch -d feature/$*) }
-
 # Create a new directory and enter it
 function mkd() {
 	mkdir -p "$@" && cd "$_";
@@ -47,3 +43,7 @@ function fs() {
 		du $arg .[^.]* ./*;
 	fi;
 }
+
+# git feature branch
+function fstart() { git checkout -b feature/$* develop }
+function ffinish() { (git checkout develop && git merge --no-ff feature/$* && git branch -d feature/$*) }
