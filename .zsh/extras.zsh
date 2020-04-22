@@ -1,7 +1,4 @@
-#!/usr/bin/env bash
-
-# Git credentials
-# Not in the repository, to prevent people from accidentally committing under my name
+# Set git credentials
 GIT_AUTHOR_NAME="Merlin Unterfinger"
 GIT_COMMITTER_NAME="$GIT_AUTHOR_NAME"
 git config --global user.name "$GIT_AUTHOR_NAME"
