@@ -1,5 +1,5 @@
 # Environment variables
-source ~/.zsh/zshenv.env
+source ~/.zsh/zshenv.zsh
 
 # Pyenv
 if command -v pyenv 1>/dev/null 2>&1; then
@@ -7,10 +7,10 @@ if command -v pyenv 1>/dev/null 2>&1; then
 fi
 
 # Aliases
-source ~/.zsh/.aliases
+source ~/.zsh/aliases.zsh
 
 # Functions
-source ~/.zsh/.functions
+source ~/.zsh/functions.zsh
 
 # Color style
 source ~/.zsh/style.zsh
