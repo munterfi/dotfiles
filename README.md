@@ -80,6 +80,9 @@ git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
 ./link.sh
 ```
 
-## References
+## Thanks to
 
 * [managing-your-dotfiles](https://www.anishathalye.com/2014/08/03/managing-your-dotfiles/)
+* [mathiasbynens](https://github.com/mathiasbynens/dotfiles)
+* [anishathalye](https://github.com/anishathalye/dotbot)
+* [jorisnoo](https://github.com/jorisnoo/dotfiles)
