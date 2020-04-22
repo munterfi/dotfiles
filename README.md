@@ -1,7 +1,9 @@
 # .files
 
 ## macOS setup
-## homebrew
+Set up MBP on Catalina.
+
+### homebrew
 
 ``` sh
 # Install
@@ -23,7 +25,8 @@ brew install pandoc
 ```
 
 
-## pyenv
+### pyenv
+Manage python versions.
 
 ``` bash
 brew install pyenv
@@ -47,16 +50,17 @@ which pip
 pip -V
 ```
 
-## Software
+### Software
+Avoid `brew cask install <PKG>`, install manually:
 
 * Atom
-* R
+* R (No binary packages from CRAN if installed via `brew install r`)
 * RStudio
 * PyCharm
 * Docker Desktop
 * VirtualBox
 * Julia
-* JupyterLab: IPKernel for R, Python and Julia
+* JupyterLab: IPKernel for R, Python and Julia (pip install)
 * darktable
 * Affinity
 * Cyberduck
