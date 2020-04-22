@@ -1,5 +1,11 @@
 # .files
 
+This repo is a personal dotfile collection. For linking use:
+``` bash
+git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
+./link.sh
+```
+
 ## macOS setup
 Set up MBP on Catalina.
 
@@ -13,25 +19,26 @@ Set up MBP on Catalina.
 brew update;brew upgrade;brew update;brew upgrade
 
 # Packages
-? brew 'coreutils'
-?brew install grep
+brew coreutils
+brew install pkg-config
+brew install grep
 brew install wget
 brew install tree
-? brew install curl
-brew install pkg-config
+brew install curl
+brew install pyenv
 brew install gdal
 brew install spatialindex
 brew install pandoc
 ```
 
+After installing homebrew pkgs, link the dotfiles.
 
 ### pyenv
 Manage python versions.
 
 ``` bash
-brew install pyenv
-# Add to .zshtc or .bash_profile
-echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.zshrc
+# Already added to .zshrc by linking
+# Else: echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.zshrc
 
 # Restart shell and install python
 exec $SHELL
@@ -42,7 +49,7 @@ pyenv versions
 pyenv global 3.8.2
 exec $SHELL
 
-# check environment
+# Check environment
 pyenv version
 which python
 python -V
@@ -66,8 +73,13 @@ Avoid `brew cask install <PKG>`, install manually:
 * Cyberduck
 * QGIS
 
-
 ## Arch Linux
 ```sh
-pacman -S zsh
+pacman -S base-devel zsh git vim geos gdal proj r julia
+git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
+./link.sh
 ```
+
+## References
+
+* [managing-your-dotfiles](https://www.anishathalye.com/2014/08/03/managing-your-dotfiles/)
