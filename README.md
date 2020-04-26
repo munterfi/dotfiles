@@ -1,10 +1,12 @@
 # .files
 
-This repo is a personal dotfile collection. For linking use:
+This repository is a personal dotfile collection. For linking use:
 ``` bash
 git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
-./link.sh
+./install.sh
 ```
+
+... or create the symbolic links manually (e.g. `ln -s <repository-path>/.zshrc ~/.zshrc`).
 
 ## macOS setup
 Set up on macOS Catalina.
@@ -81,7 +83,7 @@ Check the files manually before linking. Hint: Use `en_DK.UTF-8` in `.zsh/zshenv
 ```sh
 pacman -S base-devel zsh git vim geos gdal proj r julia
 git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
-./link.sh
+./install.sh
 ```
 
 ## Thanks to
