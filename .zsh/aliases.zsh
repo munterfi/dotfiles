@@ -1,7 +1,6 @@
 # General
 alias brew-update='brew update && brew upgrade && brew cleanup'
 alias macos-update='sudo softwareupdate -i -a'
-alias docker-start='open -a docker'
 alias week='date +%V'
 alias urlencode='python -c "import sys, urllib.parse as ulp; print(ulp.quote_plus(sys.argv[1]));"'
 alias reload="exec ${SHELL} -l"

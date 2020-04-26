@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Open Docker Desktop
+open -a docker
+echo "Waiting for Docker to launch..."
+while (! docker stats --no-stream >/dev/null 2>&1 ); do
+  sleep 5
+done
+
+# Start new shell for monitoring
+osascript -e 'tell app "Terminal"
+  do script "docker stats -a"
+  set the bounds of the first window to {0, 0, 1790, 350}
+end tell'
