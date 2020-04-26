@@ -51,24 +51,34 @@ confirm() {
 }
 
 function lns_home () {
-  echo "Linking: ${BASEDIR}/${1} <- ${HOME}/${1}"
+  echo "-> Linking: ${BASEDIR}/${1} <- ~/${1}"
   # Omit -rf  as it throws an error if a directory (safer).
   ln -s "${BASEDIR}/${1}" "${HOME}/${1}"
 }
 
 function create_link() {
   local filename="${1}"
+  echo "Configure: '~/${filename}'"
 
-  # Check if exists
-  if [ -f "${HOME}/${filename}" ] || [ -d "${HOME}/${filename}" ]; then
-    # Remove and replace?
-    echo "Warning: '~/${filename}' already exists."
-    if confirm "Replace with a symbolic link?"; then
-      rm "${HOME}/${filename}"
+  # Check if directory and not symbolic link to a directory exists.
+  if [ -d "${HOME}/${filename}" ] && [ ! -h "${HOME}/${filename}" ]; then
+    echo -e "-> Warning: Directory '~/${filename}' already exists.
+   Please check directory content and remove manually."
+    echo "-> Linking: '~/${filename}' skipped."
+  else
+    # Check if file, link to a file or link to a directory exists.
+    if [ -f "${HOME}/${filename}" ] || [ -d "${HOME}/${filename}" ]; then
+      # Remove and replace?
+      echo "-> Warning: File or link '~/${filename}' already exists."
+      if confirm "   Replace with a symbolic link?"; then
+        rm "${HOME}/${filename}"
+        lns_home "${filename}"
+      else
+        echo "-> Linking: '~/${filename}' skipped."
+      fi
+    else
       lns_home "${filename}"
     fi
-  else
-    lns_home "${filename}"
   fi
 }
 
@@ -87,3 +97,6 @@ create_link .vim
 # git
 # create_link .gitconfig
 # create_link .gitignore
+
+# Restart SHELL
+exec $SHELL
