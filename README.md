@@ -11,26 +11,16 @@ git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
 ## macOS setup
 Set up on macOS Catalina.
 
-### homebrew
-
+### Homebrew
 ``` sh
 # Install
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 
 # Update all
-brew update;brew upgrade;brew update;brew upgrade
+brew update; brew upgrade; brew cleanup
 
 # Packages
-brew install coreutils
-brew install pkg-config
-brew install grep
-brew install wget
-brew install tree
-brew install curl
-brew install pyenv
-brew install gdal
-brew install spatialindex
-brew install pandoc
+brew install "$(<pkg/brewlist.txt)"
 ```
 
 After installing homebrew pkgs, link the dotfiles.
@@ -57,23 +47,36 @@ which python
 python -V
 which pip
 pip -V
+
+# Packages
+pip install -r pkg/piplist.txt
 ```
 
-### Software
+### R
+Install latest R version directly from [CRAN](https://cloud.r-project.org). No binary packages from CRAN are available if installed via `brew install r`. Then install packages:
+
+``` bash
+Rscript -e 'install.packages(read.table("pkg/rlist.txt")[[1]], repo="https://cran.rstudio.com/")'
+```
+
+### Applications
 Avoid `brew cask install <PKG>`, install manually:
 
 * Atom
-* R (No binary packages from CRAN if installed via `brew install r`)
+* LuLu
 * RStudio
 * PyCharm
+* Postman
 * Docker Desktop
 * VirtualBox
 * Julia
+* ImageOptim
 * JupyterLab: IPKernel for R, Python and Julia (pip install)
 * darktable
-* Affinity
+* Affinity Photo
 * Cyberduck
 * QGIS
+* VLC
 
 ## Arch Linux
 
