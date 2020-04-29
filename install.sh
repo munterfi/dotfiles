@@ -94,6 +94,9 @@ create_link .zsh
 create_link .vimrc
 create_link .vim
 
+# bash
+create_link .bash_profile
+
 # git
 # create_link .gitconfig
 # create_link .gitignore
