@@ -11,8 +11,7 @@ git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
 ## macOS setup
 Set up on macOS Catalina.
 
-### homebrew
-
+### Homebrew
 ``` sh
 # Install
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
@@ -53,12 +52,18 @@ pip -V
 pip install -r pkg/piplist.txt
 ```
 
-### Software
+### R
+Install latest R version directly from [CRAN](https://cloud.r-project.org). No binary packages from CRAN are available if installed via `brew install r`. Then install packages:
+
+``` bash
+Rscript -e 'install.packages(read.table("pkg/rlist.txt")[[1]], repo="https://cran.rstudio.com/")'
+```
+
+### Applications
 Avoid `brew cask install <PKG>`, install manually:
 
 * Atom
 * LuLu
-* R (No binary packages from CRAN if installed via `brew install r`)
 * RStudio
 * PyCharm
 * Postman
