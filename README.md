@@ -57,6 +57,10 @@ Install latest R version directly from [CRAN](https://cloud.r-project.org). No b
 
 ``` bash
 Rscript -e 'install.packages(read.table("pkg/rlist.txt")[[1]], repo="https://cran.rstudio.com/")'
+
+# Configure for JupyterLab:
+Rscript -e 'devtools::install_github("IRkernel/IRkernel")'
+Rscript -e 'IRkernel::installspec()'
 ```
 
 ### Applications
