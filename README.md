@@ -18,19 +18,10 @@ Set up on macOS Catalina.
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 
 # Update all
-brew update;brew upgrade;brew update;brew upgrade
+brew update; brew upgrade; brew cleanup
 
 # Packages
-brew install coreutils
-brew install pkg-config
-brew install grep
-brew install wget
-brew install tree
-brew install curl
-brew install pyenv
-brew install gdal
-brew install spatialindex
-brew install pandoc
+brew install "$(<pkg/brewlist.txt)"
 ```
 
 After installing homebrew pkgs, link the dotfiles.
@@ -57,23 +48,30 @@ which python
 python -V
 which pip
 pip -V
+
+# Packages
+pip install -r pkg/piplist.txt
 ```
 
 ### Software
 Avoid `brew cask install <PKG>`, install manually:
 
 * Atom
+* LuLu
 * R (No binary packages from CRAN if installed via `brew install r`)
 * RStudio
 * PyCharm
+* Postman
 * Docker Desktop
 * VirtualBox
 * Julia
+* ImageOptim
 * JupyterLab: IPKernel for R, Python and Julia (pip install)
 * darktable
-* Affinity
+* Affinity Photo
 * Cyberduck
 * QGIS
+* VLC
 
 ## Arch Linux
 

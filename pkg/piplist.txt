@@ -1,0 +1,16 @@
+beautifulsoup4
+Fiona
+geopandas
+ipywidgets
+jupyterlab
+numpy
+pandas
+plotly
+plotly-geo
+pydeck
+pyproj
+rasterio
+requests
+Rtree
+scipy
+Shapely
