@@ -3,6 +3,7 @@ curl
 data.table
 DBI
 devtools
+dodgr
 dplyr
 DT
 geojsonsf
@@ -20,6 +21,7 @@ lwgeom
 magrittr
 mapdeck
 mapview
+osmdata
 plotly
 plyr
 purrr
