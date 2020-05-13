@@ -96,7 +96,8 @@ hi Delimiter ctermfg=249 ctermbg=NONE cterm=NONE guifg=#b2b2b2 guibg=NONE gui=NO
 " =================
 "  Background
 " =================
-hi Normal ctermfg=254 ctermbg=235 cterm=NONE guifg=#e1e1e1 guibg=#2a2a2a gui=NONE
+" hi Normal ctermfg=254 ctermbg=235 cterm=NONE guifg=#e1e1e1 guibg=#2a2a2a gui=NONE
+hi Normal ctermfg=254 ctermbg=NONE cterm=NONE guifg=#e1e1e1 guibg=NONE gui=NONE
 hi NonText ctermfg=239 ctermbg=235 cterm=NONE guifg=#4e4e4e guibg=#2a2a2a gui=NONE
 
 " ============
