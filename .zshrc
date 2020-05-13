@@ -27,4 +27,7 @@ source ~/.zsh/aliases.zsh
 source ~/.zsh/functions.zsh
 
 # Color style
-source ~/.zsh/style.zsh
+#source ~/.zsh/style.zsh
+
+# Starship
+eval "$(starship init zsh)"

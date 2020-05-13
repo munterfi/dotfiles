@@ -97,6 +97,9 @@ create_link .vim
 # bash
 create_link .bash_profile
 
+# starship
+create_link .config/starship.toml
+
 # git
 # create_link .gitconfig
 # create_link .gitignore

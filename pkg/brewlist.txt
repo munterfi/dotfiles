@@ -17,6 +17,7 @@ pyenv
 qt
 ruby
 spatialindex
+starship
 tree
 wget
 zsh-autosuggestions
