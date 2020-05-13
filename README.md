@@ -23,7 +23,9 @@ brew update; brew upgrade; brew cleanup
 brew install "$(<pkg/brewlist.txt)"
 ```
 
-After installing homebrew pkgs, link the dotfiles.
+After installing homebrew pkgs, link the dotfiles using `./install.sh`.
+For a proper display of icons download and install [Fibra Code NF](https://www.nerdfonts.com/font-downloads) font.
+
 
 ### pyenv
 Manage python versions.
@@ -66,6 +68,7 @@ Rscript -e 'IRkernel::installspec()'
 ### Applications
 Avoid `brew cask install <PKG>`, install manually:
 
+* Hyper
 * Atom
 * LuLu
 * RStudio

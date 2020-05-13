@@ -11,10 +11,15 @@ openssl
 pandoc
 perl
 pkg-config
+postgres
 proj
 pyenv
 qt
 ruby
 spatialindex
+starship
 tree
 wget
+zsh-autosuggestions
+zsh-completions
+zsh-syntax-highlighting

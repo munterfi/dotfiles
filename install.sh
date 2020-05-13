@@ -90,12 +90,18 @@ create_link bin
 create_link .zshrc
 create_link .zsh
 
+# bash
+create_link .bash_profile
+
 # vim
 create_link .vimrc
 create_link .vim
 
-# bash
-create_link .bash_profile
+# starship
+create_link .config/starship.toml
+
+# hyper
+create_link .hyper.js
 
 # git
 # create_link .gitconfig

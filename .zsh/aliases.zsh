@@ -5,6 +5,7 @@ alias week='date +%V'
 alias urlencode='python -c "import sys, urllib.parse as ulp; print(ulp.quote_plus(sys.argv[1]));"'
 alias reload="exec ${SHELL} -l"
 alias path='echo -e ${PATH//:/\\n}'
+alias grep='grep --color=auto'
 
 # Enable aliases to be sudo'ed
 alias sudo='sudo '
