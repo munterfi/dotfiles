@@ -31,3 +31,6 @@ source ~/.zsh/functions.zsh
 
 # Starship
 eval "$(starship init zsh)"
+
+# Workaround Hyper first line precent sign (wait for v3.1.0)
+unsetopt PROMPT_SP
