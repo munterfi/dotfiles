@@ -68,6 +68,7 @@ Rscript -e 'IRkernel::installspec()'
 ### Applications
 Avoid `brew cask install <PKG>`, install manually:
 
+* Hyper
 * Atom
 * LuLu
 * RStudio
