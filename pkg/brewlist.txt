@@ -19,3 +19,6 @@ ruby
 spatialindex
 tree
 wget
+zsh-autosuggestions
+zsh-completions
+zsh-syntax-highlighting
