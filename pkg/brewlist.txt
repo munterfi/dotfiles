@@ -11,6 +11,7 @@ openssl
 pandoc
 perl
 pkg-config
+postgres
 proj
 pyenv
 qt
