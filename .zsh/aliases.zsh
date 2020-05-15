@@ -38,6 +38,10 @@ alias l='ls'
 alias la='ls -a'
 alias lla='ls -la'
 
+# docker
+alias docker-cleanup='docker system prune --volumes --force'
+alias docker-stop='osascript -e "quit app \"Docker\""'
+
 # git
 alias gs='git status -s'
 alias gp='git pull'

@@ -12,3 +12,7 @@ export PATH="/Applications/Julia-1.4.app/Contents/Resources/julia/bin:$PATH"
 if command -v pyenv 1>/dev/null 2>&1; then
   eval "$(pyenv init -)"
 fi
+
+# Docker
+export DOCKER_VOLUME=~/docker/volume
+export DOCKER_LOG=~/docker/log

@@ -53,6 +53,7 @@ symbol = " "
 
 [python]
 symbol = " "
+pyenv_version_name = true
 
 [ruby]
 symbol = " "
@@ -60,3 +61,13 @@ symbol = " "
 [rust]
 symbol = " "
 
+[custom.docker]
+command = "echo  v$(docker version --format '{{.Server.Version}}')"
+files = ["Dockerfile"]
+style = "bold #0db7ed"
+
+[custom.r]
+command = 'echo "R v${$(R --version):10:5}"'
+directories = ["R"]
+extensions = ["R", "r"]
+style = "bold #919198"

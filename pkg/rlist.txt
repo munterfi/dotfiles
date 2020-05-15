@@ -31,6 +31,8 @@ Rcpp
 rmarkdown
 roxygen2
 sf
+shiny
+shinythemes
 stars
 stringi
 stringr
