@@ -73,6 +73,7 @@ Avoid `brew cask install <PKG>`, install manually:
 * LuLu
 * RStudio
 * PyCharm
+* pgAdmin4
 * Postman
 * Docker Desktop
 * VirtualBox
