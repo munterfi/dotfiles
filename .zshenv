@@ -7,3 +7,7 @@ export PATH="$HOME/bin:$PATH";
 
 # Add julia to the `$PATH`
 export PATH="/Applications/Julia-1.4.app/Contents/Resources/julia/bin:$PATH"
+
+# Docker
+export DOCKER_VOLUME=~/docker/volume
+export DOCKER_LOG=~/docker/log

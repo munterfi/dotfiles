@@ -1,29 +1,20 @@
 #!/usr/bin/env bash
-############################################################
-#  Create symbolic links to the dotfiles on macOS          #
-#  Version: 0.1.0                                          #
-#  File: ~/install.sh                                      #
-#                                                          #
-#  -------------------------------------------------       #
-#  This script creates symbolic links from the dotfile     #
-#  locations in this local repository to the home dir      #
-#  of the current user. If a dotfile or folder already     #
-#  exists in the users home dir, the script prompts for    #
-#  deleting and replacing the file/link with a symbolic    #
-#  link.                                                   #
-#  Note: Only files and links will be deleted. If there    #
-#  are folders present in the home dir, which should be    #
-#  replaced by a symbolic link, delete them manually.      #
-#                                                          #
-#  Setup:                                                  #
-#     $ git clone https://github.com/munterfinger/dotfiles #
-#     $ cd dotfiles                                        #
-#                                                          #
-#  Usage:                                                  #
-#     $ ./install.sh                                       #
-#                                                          #
-#  GNU General Public License 3.0 - by Merlin Unterfinger  #
-############################################################
+# -----------------------------------------------------------------------------
+# Name          :install.sh
+# Description   :Creates symbolic links from the 'dotfiles' repository location
+#                to the home of the current user on macOS. If a dotfile or
+#                directory already exists in the users home, the script prompts
+#                for confirmation before deleting and replacing the file (or
+#                or link) with a symbolic link.
+# Author        :Merlin Unterfinger <info@munterfinger.ch>
+# Date          :2020-05-17
+# Version       :0.1.0
+# Usage         :./install.sh
+# Notes         :Only files and links will be deleted and replaced. If there
+#                directories present in the users home, which should be
+#                replaced by a symbolic link, delete them manually.
+# Bash          :5.0.17(1)-release
+# =============================================================================
 
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -87,6 +78,7 @@ function create_link() {
 create_link bin
 
 # zsh
+create_link .zshenv
 create_link .zshrc
 create_link .zsh
 
