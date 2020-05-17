@@ -8,7 +8,7 @@
 # Date          :2020-05-17
 # Version       :0.1.0
 # Usage         :./mkscr or mkscr if located in ~/bin
-# Notes         :Vim has to be installed and requires Bash version > 4.0.0
+# Notes         :Vim has to be installed and requires Bash version > 4.0.0.
 # Bash          :5.0.17(1)-release
 # =============================================================================
 
