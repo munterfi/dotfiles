@@ -1,8 +1,21 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# ------------------------------------------------------------------------------
+# Name          :docker-start.sh
+# Description   :Start the Docker deamon on macOS and wait until it is running.
+# Author        :Merlin Unterfinger <info@munterfinger.ch>
+# Date          :2020-05-17
+# Version       :0.1.0
+# Usage         :./docker-start.sh
+# Notes         :
+# Bash          :5.0.17(1)-release
+# ==============================================================================
 
-# Open Docker Desktop
+# Open Docker Desktop.
 open -a docker
 echo "Waiting for Docker to launch..."
 while (! docker stats --no-stream >/dev/null 2>&1 ); do
   sleep 5
 done
+
+# Show running and stopped containers.
+docker ps -a

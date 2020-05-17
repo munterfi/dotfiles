@@ -1,3 +1,4 @@
+bash
 coreutils
 curl
 gdal
