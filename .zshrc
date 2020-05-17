@@ -1,6 +1,3 @@
-# Environment variables
-source ~/.zsh/zshenv.zsh
-
 # Autosuggestions
 source /usr/local/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
@@ -25,9 +22,6 @@ source ~/.zsh/aliases.zsh
 
 # Functions
 source ~/.zsh/functions.zsh
-
-# Color style
-#source ~/.zsh/style.zsh
 
 # Starship
 eval "$(starship init zsh)"

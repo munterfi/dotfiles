@@ -87,6 +87,7 @@ function create_link() {
 create_link bin
 
 # zsh
+create_link .zshenv
 create_link .zshrc
 create_link .zsh
 
