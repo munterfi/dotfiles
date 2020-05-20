@@ -20,19 +20,19 @@ div2="======================================"
 
 _select_title(){
 
-    # Get the user input.
+    # Get the user input
     printf "Enter the script name:     " ; read -r title
 
-    # Remove the spaces from the title if necessary.
+    # Remove the spaces from the title if necessary
     title=${title// /_}
 
-    # Convert uppercase to lowercase.
+    # Convert uppercase to lowercase
     title=${title,,}
 
-    # Add .sh to the end of the title if it is not there already.
+    # Add .sh to the end of the title if it is not there already
     [ "${title: -3}" != '.sh' ] && title=${title}.sh
 
-    # Check to see if the file exists already.
+    # Check to see if the file exists already
     if [ -e $title ] ; then
         printf "\n%s\n%s\n\n" "The script \"$title\" already exists." \
         "Please select another file name."
@@ -48,7 +48,7 @@ printf "Enter the author name:     " ; read -re -i "$name" name
 vnum="0.1.0"
 printf "Enter the version number:  " ; read -re -i "$vnum" vnum
 
-# Format the output and write it to a file.
+# Format the output and write it to a file
 printf "%-16s\n\
 %-80s\n\
 %-16s%-8s\n\
@@ -64,10 +64,10 @@ printf "%-16s\n\
 '# Version' ":$vnum" '# Usage' ":./$title" '# Notes' ':' '# Bash' \
 ":${BASH_VERSION}" "# =$div2$div2" > $title
 
-# Make the file executable.
+# Make the file executable
 chmod +x $title
 
 /usr/bin/clear
 
-# Open the file with the cursor on the correct line.
+# Open the file with the cursor on the correct line
 vim +13 $title
