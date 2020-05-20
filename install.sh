@@ -25,17 +25,17 @@ confirm() {
   if [ "$1" ]; then _prompt="${1}"; else _prompt="Are you sure"; fi
   _prompt="${_prompt} [y/n] ?"
 
-  # Loop forever until the user enters a valid response (Y/N or Yes/No).
+  # Loop forever until the user enters a valid response (Y/N or Yes/No)
   while true; do
     read -r -p "${_prompt} " _response
     case "${_response}" in
-      [Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive).
+      [Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive)
         return 0
         ;;
-      [Nn][Oo]|[Nn])  # No or N.
+      [Nn][Oo]|[Nn]) # No or N (case-insensitive)
         return 1
         ;;
-      *) # Anything else (including a blank) is invalid.
+      *) # Anything else (including a blank) is invalid
         ;;
     esac
   done
@@ -43,7 +43,7 @@ confirm() {
 
 function lns_home () {
   echo "-> Linking: ${BASEDIR}/${1} <- ~/${1}"
-  # Omit -rf  as it throws an error if a directory (safer).
+  # Omit -rf flag as it throws an error if it is a directory (safer)
   ln -s "${BASEDIR}/${1}" "${HOME}/${1}"
 }
 
@@ -51,13 +51,13 @@ function create_link() {
   local filename="${1}"
   echo "Configure: '~/${filename}'"
 
-  # Check if directory and not symbolic link to a directory exists.
+  # Check if directory and not symbolic link to a directory exists
   if [ -d "${HOME}/${filename}" ] && [ ! -h "${HOME}/${filename}" ]; then
     echo -e "-> Warning: Directory '~/${filename}' already exists.
    Please check directory content and remove manually."
     echo "-> Linking: '~/${filename}' skipped."
   else
-    # Check if file, link to a file or link to a directory exists.
+    # Check if file, link to a file or link to a directory exists
     if [ -f "${HOME}/${filename}" ] || [ -d "${HOME}/${filename}" ]; then
       # Remove and replace?
       echo "-> Warning: File or link '~/${filename}' already exists."
