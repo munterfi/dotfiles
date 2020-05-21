@@ -1,27 +1,63 @@
 #!/usr/bin/env bash
 # -----------------------------------------------------------------------------
 # Name          :mkscr
-# Description   :Create an executable shell script with header section. The
-#                template script will be opened in Vim. Original script,
-#                modified from <http://code.activestate.com/recipes/577862>.
+# Description   :Create an executable script with header section in a chosen
+#                language. The associated interpreter is added to the shebang.
+#                After the creation of the file, the script is opened in Vim.
+#                Modified from <http://code.activestate.com/recipes/577862>.
 # Author        :Merlin Unterfinger <info@munterfinger.ch>
 # Date          :2020-05-17
-# Version       :0.1.0
+# Version       :0.2.0
 # Usage         :./mkscr or mkscr if located in ~/bin
 # Notes         :Vim has to be installed and requires Bash version > 4.0.0.
-# Bash          :5.0.17(1)-release
+# Bash          :5.0.17
 # =============================================================================
 
-today=$(date +%Y-%m-%d)
-div1="--------------------------------------"
-div2="======================================"
+_select_language(){
 
-/usr/bin/clear
+    # Language selection
+    printf "%s\n%s\n%s\n%s\n%s\n%s\n\n" \
+        "Select a language:" \
+        "1) Bash" \
+        "2) Julia" \
+        "3) Python" \
+        "4) R" \
+        "5) Zsh"
+    read -r selection
 
-_select_title(){
+    # Define corresponding file extension, interpeter and version
+    case $selection in
+        1) lang=Bash; terp=bash;
+           vers=${BASH_VERSION}; vers=${vers:0:6}; extn=.sh
+            ;;
+        2) lang=Julia; terp=julia;
+           vers=$(julia --version); vers=${vers:14:5}; extn=.jl
+            ;;
+        3) lang=Python; terp=python;
+           vers=$(python --version); vers=${vers:7:5}; extn=.py
+            ;;
+        4) lang=R; terp=Rscript;
+           vers=$(R --version); vers=${vers:10:5} extn=.R
+            ;;
+        5) lang=Zsh; terp=zsh;
+           vers=$(zsh --version); vers=${vers:4:5}; extn=.sh
+            ;;
+        *) /usr/bin/clear
+           printf "%s\n%s\n\n" "I did not understand your selection." \
+               "Press <Ctrl-c> to quit."
+           _select_language
+            ;;
+    esac
+
+    /usr/bin/clear
+
+}
+
+_enter_title(){
 
     # Get the user input
-    printf "Enter the script name:     " ; read -r title
+    printf "%-$off_c%s\n" "Select a language:" "$lang script"
+    printf "%-$off_c" "Enter the script name:" ; read -r title
 
     # Remove the spaces from the title if necessary
     title=${title// /_}
@@ -29,27 +65,54 @@ _select_title(){
     # Convert uppercase to lowercase
     title=${title,,}
 
-    # Add .sh to the end of the title if it is not there already
-    [ "${title: -3}" != '.sh' ] && title=${title}.sh
+    # Check for blank input
+    if [ -z $title ]; then
+        /usr/bin/clear
+        printf "%s\n%s\n\n" "Blank input is not permitted." \
+        "Please try again."
+        _enter_title
+    fi
+
+    # Add extension to the end of the title if it is not there already
+    [ "${title: -3}" != $extn ] && title=${title}${extn}
 
     # Check to see if the file exists already
     if [ -e $title ] ; then
-        printf "\n%s\n%s\n\n" "The script \"$title\" already exists." \
+        /usr/bin/clear
+        printf "%s\n%s\n\n" "The script \"$title\" already exists." \
         "Please select another file name."
-        _select_title
+        _enter_title
     fi
 
 }
 
-_select_title
-printf "Enter a description:       " ; read -r dscrpt
-name="$(git config user.name) <$(git config user.email)>"
-printf "Enter the author name:     " ; read -re -i "$name" name
-vnum="0.1.0"
-printf "Enter the version number:  " ; read -re -i "$vnum" vnum
+_enter_description(){
 
-# Format the output and write it to a file
-printf "%-16s\n\
+    # Get the user input
+    printf "%-$off_c" "Enter a description:" ; read -r dscrpt
+
+}
+
+_enter_author(){
+
+    # Set default name of git config (local, if available)
+    name="$(git config user.name) <$(git config user.email)>"
+    printf "%-$off_c" "Enter the author name:" ; read -re -i "$name" name
+
+}
+
+_enter_version(){
+
+    # Set a default version
+    vnum="0.1.0"
+    printf "%-$off_c" "Enter the version number:" ; read -re -i "$vnum" vnum
+
+}
+
+_write_file(){
+
+    # Format the output and write it to a file
+    printf "%-16s\n\
 %-80s\n\
 %-16s%-8s\n\
 %-16s%-8s\n\
@@ -59,15 +122,37 @@ printf "%-16s\n\
 %-16s%-8s\n\
 %-16s%-8s\n\
 %-16s%-8s\n\
-%s\n\n\n" '#!/usr/bin/env bash'  "# -$div1$div1" '# Name' ":$title" \
-'# Description' ":${dscrpt}" '# Author' ":$name" '# Date' ":$today" \
-'# Version' ":$vnum" '# Usage' ":./$title" '# Notes' ':' '# Bash' \
-":${BASH_VERSION}" "# =$div2$div2" > $title
+%s\n\n\n" "#!/usr/bin/env $terp"  "# -$div_1$div_1" '# Name' ":$title" \
+'# Description' ":$dscrpt" '# Author' ":$name" '# Date' ":$today" \
+'# Version' ":$vnum" '# Usage' ":./$title" '# Notes' ':' "# $lang" \
+":$vers" "# =$div_2$div_2" > $title
 
-# Make the file executable
-chmod +x $title
+    # Make the file executable
+    chmod +x $title
 
+}
+
+_open_file(){
+
+    /usr/bin/clear
+
+    # Open the file with the cursor on the correct line
+    vim +13 $title
+
+}
+
+# Variables
+today=$(date +%Y-%m-%d)                           # Current date (JJJJ-MM-TT)
+off_c=30s                                         # Offset for cursor position
+div_1="--------------------------------------"    # First division line
+div_2="======================================"    # Second division line
+
+# Run CLI
 /usr/bin/clear
-
-# Open the file with the cursor on the correct line
-vim +13 $title
+_select_language
+_enter_title
+_enter_description
+_enter_author
+_enter_version
+_write_file
+_open_file
