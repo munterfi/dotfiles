@@ -17,5 +17,5 @@ while (! docker stats --no-stream >/dev/null 2>&1 ); do
   sleep 5
 done
 
-# Show running and stopped containers.
+# Show running and stopped containers
 docker ps -a
