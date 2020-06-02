@@ -71,5 +71,5 @@ tre () {
 }
 
 # git feature branch
-function fstart() { git checkout -b feature/$* develop }
-function ffinish() { (git checkout develop && git merge --no-ff feature/$* && git branch -d feature/$*) }
+function feature-start() { git checkout -b feature/$* develop }
+function feature-merge() { (git checkout develop && git merge --no-ff feature/$* && git branch -d feature/$*) }
