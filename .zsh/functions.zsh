@@ -3,6 +3,57 @@ function mkd() {
 	mkdir -p "$@" && cd "$_";
 }
 
+# Search for process id
+function p(){
+    
+    ppat=$1
+    m=$2
+
+    # Check monitor option
+    if [ "$m" = "-m" ]; then
+        echo "Juluu!"
+        while :
+        do
+            s=$(ps aux | grep -i $ppat | grep -v grep)
+            clear
+            echo $s
+            sleep 1
+        done
+    else
+        ps aux | grep -i $ppat | grep -v grep
+    fi
+}
+
+# Kill process by name pattern
+function ka(){
+
+    # Kill signal, defaults to 15 (1: SIGHUP, 9: SIGKILL, 15: SIGTERM, ...)
+    klevel=${2:-15}
+
+    echo -e "Searching processes with pattern '${1}'..."
+    cnt=$(p $1 | wc | awk '{ print $1 }')      # Count of matching processes
+    
+    if [ $cnt -lt 1 ]
+    then 
+        echo "No matching processes found."
+        exit 0
+    else 
+        p $1
+       
+        echo -e "\nTerminating ${cnt} processes..."
+        ps aux | grep -i $1 | grep -v grep | awk '{print $2}' | xargs sudo kill -$klevel
+       
+        check=$(p $1 | wc | awk '{ print $1 }')   # Count again
+        if [ $check -gt 0 ]
+        then
+            echo  "\nFailure! Not all matching processes terminated (try 'ka $1 -9')."
+            p $1
+        else
+            echo -e "\nSuccess! All matching processes terminated."
+        fi
+    fi
+}
+
 # Create a .tar.gz archive, using `gzip` for compression
 function targz() {
 	local tmpFile="${@%/}.tar";
