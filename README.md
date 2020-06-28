@@ -86,13 +86,13 @@ Avoid `brew cask install <PKG>`, install manually:
 * QGIS
 * VLC
 
-## Arch Linux
+## Arch Linux / CentOS 
 
 Some paths have to be adjusted (e.g. julia) and some macOS specific alias should be commented out.
-Check the files manually before linking. Hint: Use `en_DK.UTF-8` in `.zsh/zshenv.zsh`.
+Check the files manually before linking. Hint: Use `en_DK.UTF-8` in `.zshenv`.
 
 ```sh
-pacman -S base-devel zsh git vim geos gdal proj r julia
+pacman -S base-devel zsh git vim geos gdal proj r julia # or: dnf install
 git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
 ./install.sh
 ```
