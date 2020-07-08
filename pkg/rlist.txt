@@ -6,6 +6,7 @@ devtools
 dodgr
 dplyr
 DT
+flexpolyline
 geojsonsf
 ggplot2
 googlePolylines
