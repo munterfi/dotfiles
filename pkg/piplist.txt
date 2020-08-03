@@ -1,8 +1,8 @@
 beautifulsoup4
-Cython
+cython
 dash
 dask
-Fiona
+fiona
 folium
 geoalchemy2
 geopandas
@@ -19,7 +19,7 @@ pygeos
 pyproj
 rasterio
 requests
-Rtree-linux
+rtree
 scipy
 seaborn
 shapely
