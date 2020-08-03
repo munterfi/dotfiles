@@ -1,8 +1,10 @@
 beautifulsoup4
+Cython
 dash
 dask
 Fiona
 folium
+geoalchemy2
 geopandas
 html5lib
 ipywidgets
@@ -15,11 +17,12 @@ plotly-geo
 pydeck
 pygeos
 pyproj
-pytorch
 rasterio
 requests
-Rtree
+Rtree-linux
 scipy
 seaborn
-Shapely
+shapely
 scikit-learn
+sqlalchemy
+torch

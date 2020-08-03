@@ -36,11 +36,11 @@ Manage python versions.
 
 # Restart shell and install python
 exec $SHELL
-pyenv install 3.8.2
+pyenv install 3.8.5
 pyenv versions
 
 # Set global
-pyenv global 3.8.2
+pyenv global 3.8.5
 exec $SHELL
 
 # Check environment
@@ -86,7 +86,7 @@ Avoid `brew cask install <PKG>`, install manually:
 * QGIS
 * VLC
 
-## Arch Linux / CentOS 
+## Arch Linux / CentOS
 
 Some paths have to be adjusted (e.g. julia) and some macOS specific alias should be commented out.
 Check the files manually before linking. Hint: Use `en_DK.UTF-8` in `.zshenv`.
