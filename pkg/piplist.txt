@@ -1,4 +1,5 @@
 beautifulsoup4
+Cython
 dash
 dask
 Fiona

@@ -1,6 +1,7 @@
 bash
 coreutils
 curl
+cookiecutter
 gdal
 geos
 git
