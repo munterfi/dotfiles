@@ -11,6 +11,7 @@ geojsonsf
 ggplot2
 googlePolylines
 hereR
+igraph
 jsonify
 jsonlite
 leafem
@@ -39,6 +40,7 @@ stringi
 stringr
 testthat
 tibble
+tidygraph
 tidyr
 tidyselect
 tidyverse
