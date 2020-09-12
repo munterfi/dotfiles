@@ -11,6 +11,11 @@ alias ssh-pub='(pbcopy < ~/.ssh/id_rsa.pub; echo "Copied SSH Key to clipboard.")
 # Enable aliases to be sudo'ed
 alias sudo='sudo '
 
+# Kubernetes
+alias k='kubectl'
+alias k-start='minikube start'
+alias k-stop='minikube stop'
+
 # Show/hide hidden files in Finder
 alias show='defaults write com.apple.finder AppleShowAllFiles -bool true && killall Finder'
 alias hide='defaults write com.apple.finder AppleShowAllFiles -bool false && killall Finder'
