@@ -10,6 +10,7 @@ html5lib
 ipywidgets
 jupyterlab
 keras
+mlxtend
 numpy
 pandas
 plotly
@@ -17,6 +18,7 @@ plotly-geo
 pydeck
 pygeos
 pyproj
+pysal
 rasterio
 requests
 rtree

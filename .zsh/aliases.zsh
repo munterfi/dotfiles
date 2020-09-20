@@ -7,6 +7,7 @@ alias reload="exec ${SHELL} -l"
 alias path='echo -e ${PATH//:/\\n}'
 alias grep='grep --color=auto'
 alias ssh-pub='(pbcopy < ~/.ssh/id_rsa.pub; echo "Copied SSH Key to clipboard.")'
+alias o='open .'
 
 # Enable aliases to be sudo'ed
 alias sudo='sudo '
