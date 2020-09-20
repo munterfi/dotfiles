@@ -7,9 +7,15 @@ alias reload="exec ${SHELL} -l"
 alias path='echo -e ${PATH//:/\\n}'
 alias grep='grep --color=auto'
 alias ssh-pub='(pbcopy < ~/.ssh/id_rsa.pub; echo "Copied SSH Key to clipboard.")'
+alias o='open .'
 
 # Enable aliases to be sudo'ed
 alias sudo='sudo '
+
+# Kubernetes
+alias k='kubectl'
+alias k-start='minikube start'
+alias k-stop='minikube stop'
 
 # Show/hide hidden files in Finder
 alias show='defaults write com.apple.finder AppleShowAllFiles -bool true && killall Finder'

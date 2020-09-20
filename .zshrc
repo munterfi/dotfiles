@@ -11,6 +11,7 @@ fi
 
 # Syntax highlighting
 source /usr/local/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+source <(kubectl completion zsh)
 
 # Pyenv
 if command -v pyenv 1>/dev/null 2>&1; then
