@@ -2,10 +2,12 @@ bash
 coreutils
 curl
 cookiecutter
+ffmpeg
 gdal
 geos
 git
 glances
+graphviz
 grep
 kubectl
 minikube
