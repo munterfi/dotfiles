@@ -9,6 +9,12 @@ alias grep='grep --color=auto'
 alias ssh-pub='(pbcopy < ~/.ssh/id_rsa.pub; echo "Copied SSH Key to clipboard.")'
 alias o='open .'
 
+# Python
+alias pydev-update='python -m pip install --upgrade pip setuptools wheel twine'
+alias pydev-build='python setup.py sdist bdist_wheel'
+alias pydev-upload-testenv='python -m twine upload --repository testpypi dist/*'
+alias pydev-upload='python -m twine dist/*'
+
 # Enable aliases to be sudo'ed
 alias sudo='sudo '
 
