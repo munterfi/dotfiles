@@ -17,6 +17,7 @@ openssl
 pandoc
 perl
 pkg-config
+poetry
 postgres
 proj
 pyenv
