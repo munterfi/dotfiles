@@ -58,7 +58,7 @@ alias docker-stop='osascript -e "quit app \"Docker\""'
 # git
 alias gs='git status -s'
 alias gp='git pull'
-alias gup='git push origin HEAD'
+alias gup='git push'
 alias ga='git add'
 alias gaa='git add .'
 alias gau='git add -u'
