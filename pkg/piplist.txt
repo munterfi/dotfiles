@@ -1,12 +1,16 @@
+wheel
+numpy
 beautifulsoup4
 cython
 dash
 dask
+flake8
 fiona
 folium
-gempy
+gdal
 geoalchemy2
 geopandas
+glacier-flow-model
 html5lib
 ipywidgets
 jinja2
@@ -15,7 +19,8 @@ keras
 lice
 mlxtend
 momepy
-numpy
+mypy
+numba
 osmnx
 pandas
 plotly
@@ -25,8 +30,9 @@ pydotplus
 pydub
 pygeos
 pyrosm
+pytest
+pytest-cov
 pyproj
-pysal
 rasterio
 requests
 rise
@@ -41,3 +47,4 @@ speechrecognition
 sqlalchemy
 torch
 xgboost
+zeitsprung
