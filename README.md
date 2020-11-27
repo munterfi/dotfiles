@@ -34,11 +34,11 @@ Manage python versions.
 # Already added to .zshrc by linking
 # Else: echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.zshrc
 
-# List all version available to pyenv and set version
+# List all version available to pyenv
 pyenv install --list
 
-# Use pyenv wrapper pyset
-pyset --upgrade --requirement <version>
+# Use pyenv wrapper pyset to set global version
+pyset -U -r pkg/piplist.txt <version>
 ```
 
 ### R
