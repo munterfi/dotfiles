@@ -77,6 +77,23 @@ Avoid `brew cask install <PKG>` , install manually:
 * Cyberduck
 * QGIS
 * VLC
+* Visual Studio Code
+
+Set Google style code formatting for C++ in vscode:
+
+``` sh
+# macOS
+vim $HOME/Library/Application Support/Code/User/settings.json
+# Linux
+vim $HOME/.config/Code/User/settings.json
+
+# Insert line:
+{
+  ...,
+  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 0}",
+  ...
+}
+````
 
 ### SSH
 
