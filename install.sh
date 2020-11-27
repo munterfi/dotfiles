@@ -95,6 +95,9 @@ create_link .config/starship.toml
 # hyper
 create_link .hyper.js
 
+# R
+create_link .R/Makevars
+
 # git
 # create_link .gitconfig
 # create_link .gitignore
