@@ -97,7 +97,7 @@ echo "Pip:         $(pyenv which pip)"
 # Upgrade pip and packages
 if [[ ! -z $PIP_UPGRADE ]]; then
   echo "Upgrading packages using pip ..."
-  pip install -U pip
+  pip install -U pip wheel
   pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip install -U
 fi
 
@@ -107,6 +107,7 @@ if [[ ! -z $PIP_REQUIREMENT ]]; then
   if [[ ! -z $PIP_UPGRADE ]]; then
     pip install -U -r $PIP_REQUIREMENT
   else
+    pip install wheel
     pip install -r $PIP_REQUIREMENT
   fi
 fi
