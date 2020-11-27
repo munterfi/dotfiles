@@ -71,3 +71,4 @@ alias god='git checkout develop'
 alias gba='git branch -avv'
 alias glog='git log --graph --date=iso --pretty=format:"%C(auto)%h%x09%<(4,trunc)%an %C(#D3D3D3)%<(18,trunc)%ad%C(reset) %C(red)%d%C(reset) %s"'
 alias grank='git shortlog -sn --no-merges'
+alias gprune="git fetch -p && git branch -vv | awk '/: gone]/{print $1}' | xargs git branch -d"
