@@ -73,6 +73,7 @@ Avoid `brew cask install <PKG>` , install manually:
 * ImageOptim
 * JupyterLab: IPKernel for R, Python and Julia (pip install)
 * darktable
+* Affinity Designer
 * Affinity Photo
 * Cyberduck
 * QGIS
