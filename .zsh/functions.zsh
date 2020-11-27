@@ -109,7 +109,7 @@ function fs() {
 	if [[ -n "$@" ]]; then
 		du $arg -- "$@";
 	else
-		du $arg .[^.]* ./*;
+		du $arg .[^.]* ./* | sort -h;
 	fi;
 }
 

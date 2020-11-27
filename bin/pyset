@@ -28,7 +28,7 @@ Options:
 EOF
 }
 
-# if less than one argument supplied, display usage
+# If less than one argument supplied, display usage
 if [ $# -le 0 ]; then
   usage
   exit 1
