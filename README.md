@@ -44,8 +44,8 @@ pyenv install --list
 pyset -U -r pkg/piplist.txt <version>
 
 # Tell poetry which version to use
-# (bug: Takes hombrew python instead global pyenv)
-poetry env use python3.8
+# (Bug: Takes Homrbrew python instead global pyenv version)
+poetry env use <python-version>
 ```
 
 ### R
