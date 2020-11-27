@@ -1,0 +1,112 @@
+#!/usr/bin/env bash
+# -----------------------------------------------------------------------------
+# Name          :pyset
+# Description   :Wrapper script for pyenv to set a specific python version. If
+#                the version is not yet installed it will set it.
+# Author        :Merlin Unterfinger <info@munterfinger.ch>
+# Date          :2020-11-27
+# Version       :0.1.0
+# Usage         :pyset [options] <version>
+# Notes         :
+# Bash          :5.0.18
+# =============================================================================
+
+usage() {
+  cat <<EOF
+Usage: pyset [options] <version>
+  version                     The python version to set as global.
+
+Description:
+  Wrapper script for pyenv to set a specific python version as global.
+  If the python version is not yet installed it is installed using pyenv.
+
+Options:
+  -h, --help                  Show help.
+  -v, --version               Display the version of pyset.
+  -r, --requirement <file>    Install packages from the given requirements file.
+  -U, --upgrade               Upgrade all packages to the newest available version.
+EOF
+}
+
+# if less than one argument supplied, display usage
+if [ $# -le 0 ]; then
+  usage
+  exit 1
+fi
+
+# Parse optional and positional arguments
+VERSION=0.1.0
+PARAMS=""
+while (("$#")); do
+  case "$1" in
+  -h | --help)
+    usage
+    exit
+    ;;
+  -v | --version)
+    echo "pyset $VERSION, wrapping $(pyenv --version)"
+    exit
+    ;;
+  -U | --upgrade)
+    PIP_UPGRADE=0
+    shift
+    ;;
+  -r | --requirement)
+    if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+      PIP_REQUIREMENT=$2
+      shift 2
+    else
+      echo "Error: Argument for $1 is missing" >&2
+      exit 1
+    fi
+    ;;
+  -* | --*=) # Unsupported flags
+    echo "Error: Unsupported option $1" >&2
+    exit 1
+    ;;
+  *) # Preserve positional arguments
+    PARAMS="$PARAMS $1"
+    shift
+    ;;
+  esac
+done
+
+# Set positional arguments in their proper place
+eval set -- "$PARAMS"
+PY_VERSION=$1
+
+# Check if python version is available to pyenv
+if [[ -z $(pyenv install --list | grep $PY_VERSION) ]]; then
+  echo "Python version $PY_VERSION is not available, try upgrading pyenv."
+  exit 1
+fi
+
+# Install if version not present on the system
+if [[ -z $(pyenv versions --bare | grep $PY_VERSION) ]]; then
+  echo "Installing python $PY_VERSION using pyenv ..."
+  pyenv install $PY_VERSION
+fi
+
+# Set global version
+echo "Setting global python version using pyenv ..."
+pyenv global $PY_VERSION
+echo "Version:     $(python --version)"
+echo "Executable:  $(pyenv which python)"
+echo "Pip:         $(pyenv which pip)"
+
+# Upgrade pip and packages
+if [[ ! -z $PIP_UPGRADE ]]; then
+  echo "Upgrading packages using pip ..."
+  pip install -U pip
+  pip list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip install -U
+fi
+
+# Install packages
+if [[ ! -z $PIP_REQUIREMENT ]]; then
+  echo "Installing packages from requirements file using pip ..."
+  if [[ ! -z $PIP_UPGRADE ]]; then
+    pip install -U -r $PIP_REQUIREMENT
+  else
+    pip install -r $PIP_REQUIREMENT
+  fi
+fi
