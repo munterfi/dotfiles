@@ -124,3 +124,6 @@ tre () {
 # git feature branch
 function feature-start() { git checkout -b feature/$* develop }
 function feature-merge() { (git checkout develop && git merge --no-ff feature/$* && git branch -d feature/$*) }
+function bugfix-start() { git checkout -b bugfix/$* develop }
+function bugfix-merge() { (git checkout develop && git merge --no-ff bugfix/$* && git branch -d bugfix/$*) }
+function release-start() { git checkout -b release/$* develop }
