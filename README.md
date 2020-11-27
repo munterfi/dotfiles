@@ -84,7 +84,7 @@ Set Google style code formatting for C++ in vscode:
 
 ``` sh
 # macOS
-vim $HOME/Library/Application Support/Code/User/settings.json
+vim "$HOME/Library/Application Support/Code/User/settings.json"
 # Linux
 vim $HOME/.config/Code/User/settings.json
 
