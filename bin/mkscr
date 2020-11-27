@@ -13,7 +13,7 @@
 # Bash          :5.0.17
 # =============================================================================
 
-_select_language(){
+_select_language() {
 
     # Language selection
     printf "%s\n%s\n%s\n%s\n%s\n%s\n\n" \
@@ -27,37 +27,58 @@ _select_language(){
 
     # Define corresponding file extension, interpeter and version
     case $selection in
-        1) lang=Bash; terp=bash;
-           vers=${BASH_VERSION}; vers=${vers:0:6}; extn=.sh
-            ;;
-        2) lang=Julia; terp=julia;
-           vers=$(julia --version); vers=${vers:14:5}; extn=.jl
-            ;;
-        3) lang=Python; terp=python;
-           vers=$(python --version); vers=${vers:7:5}; extn=.py
-            ;;
-        4) lang=R; terp=Rscript;
-           vers=$(R --version); vers=${vers:10:5} extn=.R
-            ;;
-        5) lang=Zsh; terp=zsh;
-           vers=$(zsh --version); vers=${vers:4:5}; extn=.sh
-            ;;
-        *) /usr/bin/clear
-           printf "%s\n%s\n\n" "I did not understand your selection." \
-               "Press <Ctrl-c> to quit."
-           _select_language
-            ;;
+    1)
+        lang=Bash
+        terp=bash
+        vers=${BASH_VERSION}
+        vers=${vers:0:6}
+        extn=.sh
+        ;;
+    2)
+        lang=Julia
+        terp=julia
+        vers=$(julia --version)
+        vers=${vers:14:5}
+        extn=.jl
+        ;;
+    3)
+        lang=Python
+        terp=python
+        vers=$(python --version)
+        vers=${vers:7:5}
+        extn=.py
+        ;;
+    4)
+        lang=R
+        terp=Rscript
+        vers=$(R --version)
+        vers=${vers:10:5} extn=.R
+        ;;
+    5)
+        lang=Zsh
+        terp=zsh
+        vers=$(zsh --version)
+        vers=${vers:4:5}
+        extn=.sh
+        ;;
+    *)
+        /usr/bin/clear
+        printf "%s\n%s\n\n" "I did not understand your selection." \
+            "Press <Ctrl-c> to quit."
+        _select_language
+        ;;
     esac
 
     /usr/bin/clear
 
 }
 
-_enter_title(){
+_enter_title() {
 
     # Get the user input
     printf "%-$off_c%s\n" "Select a language:" "$lang script"
-    printf "%-$off_c" "Enter the script name:" ; read -r title
+    printf "%-$off_c" "Enter the script name:"
+    read -r title
 
     # Remove the spaces from the title if necessary
     title=${title// /_}
@@ -69,7 +90,7 @@ _enter_title(){
     if [ -z $title ]; then
         /usr/bin/clear
         printf "%s\n%s\n\n" "Blank input is not permitted." \
-        "Please try again."
+            "Please try again."
         _enter_title
     fi
 
@@ -77,39 +98,42 @@ _enter_title(){
     [ "${title: -3}" != $extn ] && title=${title}${extn}
 
     # Check to see if the file exists already
-    if [ -e $title ] ; then
+    if [ -e $title ]; then
         /usr/bin/clear
         printf "%s\n%s\n\n" "The script \"$title\" already exists." \
-        "Please select another file name."
+            "Please select another file name."
         _enter_title
     fi
 
 }
 
-_enter_description(){
+_enter_description() {
 
     # Get the user input
-    printf "%-$off_c" "Enter a description:" ; read -r dscrpt
+    printf "%-$off_c" "Enter a description:"
+    read -r dscrpt
 
 }
 
-_enter_author(){
+_enter_author() {
 
     # Set default name of git config (local, if available)
     name="$(git config user.name) <$(git config user.email)>"
-    printf "%-$off_c" "Enter the author name:" ; read -re -i "$name" name
+    printf "%-$off_c" "Enter the author name:"
+    read -re -i "$name" name
 
 }
 
-_enter_version(){
+_enter_version() {
 
     # Set a default version
     vnum="0.1.0"
-    printf "%-$off_c" "Enter the version number:" ; read -re -i "$vnum" vnum
+    printf "%-$off_c" "Enter the version number:"
+    read -re -i "$vnum" vnum
 
 }
 
-_write_file(){
+_write_file() {
 
     # Format the output and write it to a file
     printf "%-16s\n\
@@ -122,17 +146,17 @@ _write_file(){
 %-16s%-8s\n\
 %-16s%-8s\n\
 %-16s%-8s\n\
-%s\n\n\n" "#!/usr/bin/env $terp"  "# -$div_1$div_1" '# Name' ":$title" \
-'# Description' ":$dscrpt" '# Author' ":$name" '# Date' ":$today" \
-'# Version' ":$vnum" '# Usage' ":./$title" '# Notes' ':' "# $lang" \
-":$vers" "# =$div_2$div_2" > $title
+%s\n\n\n" "#!/usr/bin/env $terp" "# -$div_1$div_1" '# Name' ":$title" \
+        '# Description' ":$dscrpt" '# Author' ":$name" '# Date' ":$today" \
+        '# Version' ":$vnum" '# Usage' ":./$title" '# Notes' ':' "# $lang" \
+        ":$vers" "# =$div_2$div_2" >$title
 
     # Make the file executable
     chmod +x $title
 
 }
 
-_open_file(){
+_open_file() {
 
     /usr/bin/clear
 
@@ -142,10 +166,10 @@ _open_file(){
 }
 
 # Variables
-today=$(date +%Y-%m-%d)                           # Current date (JJJJ-MM-TT)
-off_c=30s                                         # Offset for cursor position
-div_1="--------------------------------------"    # First division line
-div_2="======================================"    # Second division line
+today=$(date +%Y-%m-%d)                        # Current date (JJJJ-MM-TT)
+off_c=30s                                      # Offset for cursor position
+div_1="--------------------------------------" # First division line
+div_2="======================================" # Second division line
 
 # Run CLI
 /usr/bin/clear

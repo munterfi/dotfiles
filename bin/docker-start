@@ -13,7 +13,7 @@
 # Open Docker Desktop.
 open -a docker
 echo "Waiting for Docker to launch..."
-while (! docker stats --no-stream >/dev/null 2>&1 ); do
+while (! docker stats --no-stream >/dev/null 2>&1); do
   sleep 5
 done
 

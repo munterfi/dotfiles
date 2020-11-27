@@ -23,6 +23,7 @@ lwgeom
 magrittr
 mapdeck
 mapview
+odbc
 osmdata
 plotly
 plyr
