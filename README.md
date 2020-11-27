@@ -1,17 +1,20 @@
 # .files
 
 This repository is a personal dotfile collection. For linking use:
+
 ``` bash
 git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
 ./install.sh
 ```
 
-... or create the symbolic links manually (e.g. `ln -s <repository-path>/.zshrc ~/.zshrc`).
+... or create the symbolic links manually (e.g. `ln -s <repository-path>/.zshrc ~/.zshrc` ).
 
 ## macOS setup
+
 Set up on macOS Catalina.
 
 ### Homebrew
+
 ``` sh
 # Install
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
@@ -23,11 +26,11 @@ brew update; brew upgrade; brew cleanup
 brew install "$(<pkg/brewlist.txt)"
 ```
 
-After installing homebrew pkgs, link the dotfiles using `./install.sh`.
+After installing homebrew pkgs, link the dotfiles using `./install.sh` .
 For a proper display of icons download and install [Fibra Code NF](https://www.nerdfonts.com/font-downloads).
 
-
 ### pyenv
+
 Manage python versions.
 
 ``` bash
@@ -42,7 +45,8 @@ pyset -U -r pkg/piplist.txt <version>
 ```
 
 ### R
-Install latest R version directly from [CRAN](https://cloud.r-project.org). No binary packages from CRAN are available if installed via `brew install r`. Then install packages:
+
+Install latest R version directly from [CRAN](https://cloud.r-project.org). No binary packages from CRAN are available if installed via `brew install r` . Then install packages:
 
 ``` bash
 Rscript -e 'install.packages(read.table("pkg/rlist.txt")[[1]], repo="https://cran.rstudio.com/")'
@@ -53,7 +57,8 @@ Rscript -e 'IRkernel::installspec()'
 ```
 
 ### Applications
-Avoid `brew cask install <PKG>`, install manually:
+
+Avoid `brew cask install <PKG>` , install manually:
 
 * Hyper
 * Atom
@@ -74,11 +79,12 @@ Avoid `brew cask install <PKG>`, install manually:
 * VLC
 
 ### SSH
+
 Copy existing keys into `.ssh` or generate a new one and add the key to the
 ssh-agent to prevent from the need of entering the key's passphrase after
 restarts of the machine. Then check the `.ssh/config` file:
 
-```sh
+``` sh
 Host *
   AddKeysToAgent yes
   UseKeychain yes
@@ -88,9 +94,9 @@ Host *
 ## Arch Linux / CentOS
 
 Some paths have to be adjusted (e.g. julia) and some macOS specific alias should be commented out.
-Check the files manually before linking. Hint: Use `en_DK.UTF-8` in `.zshenv`.
+Check the files manually before linking. Hint: Use `en_DK.UTF-8` in `.zshenv` .
 
-```sh
+``` sh
 pacman -S base-devel zsh git vim geos gdal proj r julia # or: dnf install
 git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
 ./install.sh
