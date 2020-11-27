@@ -10,6 +10,7 @@ glances
 graphviz
 grep
 kubectl
+llvm
 minikube
 node
 openblas
