@@ -15,3 +15,6 @@ Thumbs.db
 
 # R
 .Rhistory
+
+# vscode
+.vscode
