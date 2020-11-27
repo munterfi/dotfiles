@@ -1,5 +1,6 @@
 wheel
 numpy
+black
 beautifulsoup4
 cython
 dash
