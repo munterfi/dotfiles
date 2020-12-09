@@ -45,6 +45,7 @@ settings["autoDocstring.generateDocstringOnEnter"] = True
 settings["autoDocstring.startOnNewLine"] = True
 settings["autoDocstring.guessTypes"] = True
 settings["autoDocstring.quoteStyle"] = '"""'
+settings["editor.rulers"] = [80,120]
 
 # Write file
 with open(".vscode/settings.json", "w") as f:
