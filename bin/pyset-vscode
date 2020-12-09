@@ -1,0 +1,54 @@
+#!/usr/bin/env python3
+# -----------------------------------------------------------------------------
+# Name          :pyset-vscode
+# Description   :Sets the poetry env path as interpreter, linter, formater and
+#                docstring format in the settings of a vscode project.
+# Author        :Merlin Unterfinger <info@munterfinger.ch>
+# Date          :2020-12-09
+# Version       :0.1.0
+# Usage         :./pyset-vscode
+# Modified from :https://github.com/microsoft/vscode-python/issues/8372
+# Python        :3.8.6
+# =============================================================================
+
+from json import load, dump, dumps
+from subprocess import check_output
+from pathlib import Path
+
+# Read poetry path
+venv_path = check_output("poetry env info --path".split())
+venv_path = venv_path.decode("UTF-8").rstrip("\n")
+
+# Setup vscode setting file
+Path(".vscode").mkdir(parents=True, exist_ok=True)
+settings_file = Path(".vscode/settings.json")
+
+# Read settings
+if settings_file.is_file():
+    with open(settings_file, "r") as f:
+        settings = load(f)
+else:
+    Path(".vscode/settings.json").touch()
+    settings = dict()
+
+# Set interpreter, linter and formatter
+settings["python.pythonPath"] = venv_path
+settings["python.linting.pylintEnabled"] = False
+settings["python.linting.flake8Enabled"] = True
+settings["python.linting.flake8Args"] = [
+    "--max-line-length=79",
+    "--extend-ignore=E203"]
+settings["python.linting.enabled"] = True
+settings["python.formatting.provider"] = "black"
+settings["autoDocstring.docstringFormat"] = "numpy"
+settings["autoDocstring.generateDocstringOnEnter"] = True
+settings["autoDocstring.startOnNewLine"] = True
+settings["autoDocstring.guessTypes"] = True
+settings["autoDocstring.quoteStyle"] = '"""'
+
+# Write file
+with open(".vscode/settings.json", "w") as f:
+    dump(settings, f, sort_keys=True, indent=4)
+
+# Print settings
+print(dumps(settings, sort_keys=True, indent=4))
