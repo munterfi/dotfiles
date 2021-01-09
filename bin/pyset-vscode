@@ -40,12 +40,14 @@ settings["python.linting.flake8Args"] = [
     "--extend-ignore=E203"]
 settings["python.linting.enabled"] = True
 settings["python.formatting.provider"] = "black"
+settings["python.formatting.blackArgs"] = [
+    "--line-length=79"]
 settings["autoDocstring.docstringFormat"] = "numpy"
 settings["autoDocstring.generateDocstringOnEnter"] = True
 settings["autoDocstring.startOnNewLine"] = True
 settings["autoDocstring.guessTypes"] = True
 settings["autoDocstring.quoteStyle"] = '"""'
-settings["editor.rulers"] = [80,120]
+settings["editor.rulers"] = [80, 120]
 
 # Write file
 with open(".vscode/settings.json", "w") as f:

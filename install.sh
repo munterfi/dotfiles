@@ -8,7 +8,7 @@
 #                or link) with a symbolic link.
 # Author        :Merlin Unterfinger <info@munterfinger.ch>
 # Date          :2020-05-17
-# Version       :0.1.0
+# Version       :0.1.1
 # Usage         :./install.sh
 # Notes         :Only files and links will be deleted and replaced. If there
 #                directories present in the users home, which should be
@@ -41,7 +41,7 @@ confirm() {
   done
 }
 
-function lns_home () {
+function lns_home() {
   echo "-> Linking: ${BASEDIR}/${1} <- ~/${1}"
   # Omit -rf flag as it throws an error if it is a directory (safer)
   ln -s "${BASEDIR}/${1}" "${HOME}/${1}"
@@ -84,6 +84,9 @@ create_link .zsh
 
 # bash
 create_link .bash_profile
+
+# SSH
+create_link .ssh/config
 
 # vim
 create_link .vimrc

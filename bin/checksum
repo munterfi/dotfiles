@@ -1,0 +1,84 @@
+#!/usr/bin/env bash
+# -----------------------------------------------------------------------------
+# Name          :checksum
+# Description   :Compares the checksum of a file with checksum from provider.
+# Author        :Merlin Unterfinger <info@munterfinger.ch>
+# Date          :2021-01-09
+# Version       :0.1.0
+# Usage         :checksum
+# Notes         :
+# Bash          :5.1.4(1)-release
+# =============================================================================
+
+usage() {
+  cat <<EOF
+Usage: checksum [options] <file> <checksum>
+  file                        The file to check.
+  checksum                    The checksum to check against.
+
+Description:
+  Calculate checksum of a file and compare with given checksum from a provider.
+
+Options:
+  -h, --help                  Show help.
+  -v, --version               Display the version of checksum.
+  -a, --algorithm <name>      Cryptographic hash algorithm (default sha265).
+EOF
+}
+
+# If less than one argument supplied, display usage
+if [ $# -le 0 ]; then
+  usage
+  exit 1
+fi
+
+# Parse optional and positional arguments
+VERSION=0.1.0
+PARAMS=""
+ALGORITHM=sha256
+while (("$#")); do
+  case "$1" in
+  -h | --help)
+    usage
+    exit
+    ;;
+  -v | --version)
+    echo "checksum $VERSION, wrapping $(openssl version)"
+    exit
+    ;;
+  -a | --algorithm)
+    if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+      ALGORITHM=$2
+      shift 2
+    else
+      echo "Error: Argument for $1 is missing" >&2
+      exit 1
+    fi
+    ;;
+  -* | --*=) # Unsupported flags
+    echo "Error: Unsupported option $1" >&2
+    exit 1
+    ;;
+  *) # Preserve positional arguments
+    PARAMS="$PARAMS $1"
+    shift
+    ;;
+  esac
+done
+
+# Set positional arguments in their proper place
+eval set -- "$PARAMS"
+FILE=$1
+CHECKSUM=$2
+
+# Calculate checksum and compare
+CHECKSUM_FILE="$(openssl ${ALGORITHM} ${FILE} | awk '{ print $2 }')"
+echo "Orig   : ${CHECKSUM}"
+echo "File   : ${CHECKSUM_FILE}"
+
+# Compare
+if [ "$CHECKSUM" == "$CHECKSUM_FILE" ]; then
+  echo "Check  : OK (${ALGORITHM})" >&2
+else
+  echo "Check  : FAIL (${ALGORITHM})" >&2
+fi

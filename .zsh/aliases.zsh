@@ -32,7 +32,7 @@ alias hidedesktop='defaults write com.apple.finder CreateDesktop -bool false && 
 alias showdesktop='defaults write com.apple.finder CreateDesktop -bool true && killall Finder'
 
 # IP addresses
-alias ip="dig +short myip.opendns.com @resolver1.opendns.com"
+alias ip-ext="dig +short myip.opendns.com @resolver1.opendns.com"
 alias ip-local="ipconfig getifaddr en0"
 alias ip-ls="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }'"
 

@@ -11,7 +11,7 @@ git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
 
 ## macOS setup
 
-Set up on macOS Catalina.
+Set up on macOS Big Sur.
 
 ### Homebrew
 
@@ -44,7 +44,7 @@ pyenv install --list
 pyset -U -r pkg/piplist.txt <version>
 
 # Tell poetry which version to use
-# (Bug: Takes Homrbrew python instead global pyenv version)
+# (Bug: Uses homebrew python instead global pyenv version)
 poetry env use <python-version>
 ```
 
@@ -104,14 +104,7 @@ vim $HOME/.config/Code/User/settings.json
 
 Copy existing keys into `.ssh` or generate a new one and add the key to the
 ssh-agent to prevent from the need of entering the key's passphrase after
-restarts of the machine. Then check the `.ssh/config` file:
-
-``` sh
-Host *
-  AddKeysToAgent yes
-  UseKeychain yes
-  IdentityFile ~/.ssh/id_rsa
-```
+restarts of the machine (see `.ssh/config` file).
 
 ## Arch Linux / CentOS
 
