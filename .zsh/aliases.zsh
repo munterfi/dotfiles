@@ -9,19 +9,8 @@ alias grep='grep --color=auto'
 alias ssh-pub='(pbcopy < ~/.ssh/id_rsa.pub; echo "Copied SSH Key to clipboard.")'
 alias o='open .'
 
-# Python
-alias pydev-update='python -m pip install --upgrade pip setuptools wheel twine'
-alias pydev-build='python setup.py sdist bdist_wheel'
-alias pydev-upload-testenv='python -m twine upload --repository testpypi dist/*'
-alias pydev-upload='python -m twine dist/*'
-
 # Enable aliases to be sudo'ed
 alias sudo='sudo '
-
-# Kubernetes
-alias k='kubectl'
-alias k-start='minikube start'
-alias k-stop='minikube stop'
 
 # Show/hide hidden files in Finder
 alias show='defaults write com.apple.finder AppleShowAllFiles -bool true && killall Finder'
@@ -30,6 +19,21 @@ alias hide='defaults write com.apple.finder AppleShowAllFiles -bool false && kil
 # Hide/show all desktop icons (useful when presenting)
 alias hidedesktop='defaults write com.apple.finder CreateDesktop -bool false && killall Finder'
 alias showdesktop='defaults write com.apple.finder CreateDesktop -bool true && killall Finder'
+
+# Cleanup
+alias clean-mail="osascript -e 'tell application \"Mail\"'  -e 'delete messages of junk mailbox' -e 'delay 0.5' -e 'delete every message of trash mailbox' -e 'end tell'"
+alias clean-trash="osascript -e 'tell application \"Finder\"' -e 'set warns before emptying of trash to false' -e 'empty trash' -e 'end tell'"
+
+# Python
+alias pydev-update='python -m pip install --upgrade pip setuptools wheel twine'
+alias pydev-build='python setup.py sdist bdist_wheel'
+alias pydev-upload-testenv='python -m twine upload --repository testpypi dist/*'
+alias pydev-upload='python -m twine dist/*'
+
+# Kubernetes
+alias k='kubectl'
+alias k-start='minikube start'
+alias k-stop='minikube stop'
 
 # IP addresses
 alias ip-ext="dig +short myip.opendns.com @resolver1.opendns.com"

@@ -100,12 +100,6 @@ vim $HOME/.config/Code/User/settings.json
 }
 ````
 
-### SSH
-
-Copy existing keys into `.ssh` or generate a new one and add the key to the
-ssh-agent to prevent from the need of entering the key's passphrase after
-restarts of the machine (see `.ssh/config` file).
-
 ## Arch Linux / CentOS
 
 Some paths have to be adjusted (e.g. julia) and some macOS specific alias should be commented out.
