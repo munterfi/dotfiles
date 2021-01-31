@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -----------------------------------------------------------------------------
 # Name          :pyset-vscode
-# Description   :Sets the poetry env path as interpreter, linter, formater and
-#                docstring format in the settings of a vscode project.
+# Description   :Sets the poetry env path as interpreter, linter, formater, 
+#                pytest and docstring format in the settings of a vscode
+#                project.
 # Author        :Merlin Unterfinger <info@munterfinger.ch>
 # Date          :2020-12-09
 # Version       :0.1.0
@@ -42,6 +43,11 @@ settings["python.linting.enabled"] = True
 settings["python.formatting.provider"] = "black"
 settings["python.formatting.blackArgs"] = [
     "--line-length=79"]
+settings["python.testing.pytestArgs"] = [
+        "tests"]
+settings["python.testing.unittestEnabled"] = False
+settings["python.testing.nosetestsEnabled"] = False
+settings["python.testing.pytestEnabled"] = True
 settings["autoDocstring.docstringFormat"] = "numpy"
 settings["autoDocstring.generateDocstringOnEnter"] = True
 settings["autoDocstring.startOnNewLine"] = True
