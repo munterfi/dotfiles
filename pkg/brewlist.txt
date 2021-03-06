@@ -9,8 +9,10 @@ git
 glances
 graphviz
 grep
+java
 kubectl
 llvm
+maven
 minikube
 node
 openblas
