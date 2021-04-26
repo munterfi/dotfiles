@@ -28,6 +28,7 @@ pyenv
 qt
 ruby
 spatialindex
+sqlmap
 starship
 tree
 wget
