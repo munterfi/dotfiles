@@ -4,6 +4,7 @@ curl
 cookiecutter
 ffmpeg
 gdal
+gdb
 geos
 git
 glances
