@@ -29,14 +29,14 @@ confirm() {
   while true; do
     read -r -p "${_prompt} " _response
     case "${_response}" in
-      [Yy][Ee][Ss]|[Yy]) # Yes or Y (case-insensitive)
-        return 0
-        ;;
-      [Nn][Oo]|[Nn]) # No or N (case-insensitive)
-        return 1
-        ;;
-      *) # Anything else (including a blank) is invalid
-        ;;
+    [Yy][Ee][Ss] | [Yy]) # Yes or Y (case-insensitive)
+      return 0
+      ;;
+    [Nn][Oo] | [Nn]) # No or N (case-insensitive)
+      return 1
+      ;;
+    *) # Anything else (including a blank) is invalid
+      ;;
     esac
   done
 }
@@ -80,6 +80,7 @@ create_link bin
 # zsh
 create_link .zshenv
 create_link .zshrc
+create_link .zprofile
 create_link .zsh
 
 # bash
