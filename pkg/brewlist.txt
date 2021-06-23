@@ -4,6 +4,7 @@ curl
 cookiecutter
 ffmpeg
 gdal
+gdb
 geos
 git
 glances
@@ -14,6 +15,7 @@ kubectl
 llvm
 maven
 minikube
+nmap
 node
 openblas
 openssl
@@ -27,6 +29,7 @@ pyenv
 qt
 ruby
 spatialindex
+sqlmap
 starship
 tree
 wget
