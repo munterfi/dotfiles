@@ -58,6 +58,7 @@ alias lla='ls -la'
 # docker
 alias docker-cleanup='docker system prune --volumes --force'
 alias docker-stop='osascript -e "quit app \"Docker\""'
+alias dco='docker-compose'
 
 # git
 alias gs='git status -s'

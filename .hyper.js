@@ -126,9 +126,9 @@ module.exports = {
         // for advanced config flags please refer to https://hyper.is/#cfg
 
         // custom configs:
-        hyperVibrance: {
-            vibrancy: 'ultra-dark',
-        }
+        // hyperVibrance: {
+        //     vibrancy: 'ultra-dark',
+        // }
     },
     // a list of plugins to fetch and install from npm
     // format: [@org/]project[#version]
@@ -140,7 +140,7 @@ module.exports = {
         "hypercwd",
         "hyper-hide-scroll",
         "hyper-statusline",
-        "hyper-vibrance",
+        // "hyper-vibrance",
     ],
     // in development, you can create a directory under
     // `~/.hyper_plugins/local/` and include it here
