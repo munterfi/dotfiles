@@ -2,8 +2,8 @@
 
 This repository is a personal dotfile collection. For linking use:
 
-``` bash
-git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
+```bash
+git clone https://github.com/munterfi/dotfiles.git && cd "$_"
 ./install.sh
 ```
 
@@ -15,7 +15,7 @@ Set up on macOS Big Sur.
 
 ### Homebrew
 
-``` sh
+```sh
 # Install
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 
@@ -33,7 +33,7 @@ For a proper display of icons download and install [Fibra Code NF](https://www.n
 
 Manage python versions.
 
-``` bash
+```bash
 # Already added to .zshrc by linking
 # Else: echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.zshrc
 
@@ -52,7 +52,7 @@ poetry env use <python-version>
 
 Install latest R version directly from [CRAN](https://cloud.r-project.org). No binary packages from CRAN are available if installed via `brew install r` . Then install packages:
 
-``` bash
+```bash
 Rscript -e 'install.packages(read.table("pkg/rlist.txt")[[1]], repo="https://cran.rstudio.com/")'
 
 # Configure for JupyterLab:
@@ -86,7 +86,7 @@ Avoid `brew cask install <PKG>` , install manually:
 
 Set Google style code formatting for C++ in vscode:
 
-``` sh
+```sh
 # macOS
 vim "$HOME/Library/Application Support/Code/User/settings.json"
 # Linux
@@ -105,9 +105,9 @@ vim $HOME/.config/Code/User/settings.json
 Some paths have to be adjusted (e.g. julia) and some macOS specific alias should be commented out.
 Check the files manually before linking. Hint: Use `en_DK.UTF-8` in `.zshenv` .
 
-``` sh
+```sh
 pacman -S base-devel zsh git vim geos gdal proj r julia # or: dnf install
-git clone https://github.com/munterfinger/dotfiles.git && cd "$_"
+git clone https://github.com/munterfi/dotfiles.git && cd "$_"
 ./install.sh
 ```
 
