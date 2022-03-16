@@ -23,6 +23,7 @@ jobs:
 
       - name: Check successful linking of dotfiles
         run: |
+          . ~/.zshrc
           cd
           lla
         shell: zsh {0}
