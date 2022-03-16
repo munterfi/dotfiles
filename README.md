@@ -11,7 +11,7 @@ git clone https://github.com/munterfi/dotfiles.git && cd "$_"
 
 ## macOS setup
 
-Set up on macOS Big Sur.
+Set up on macOS Monterey.
 
 ### Homebrew
 
