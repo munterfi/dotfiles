@@ -3,6 +3,15 @@ function mkd() {
 	mkdir -p "$@" && cd "$_";
 }
 
+# Compile, execute and remove executable
+function gccexec() {
+    file=$1
+    executable="${file%%.*}"
+    gcc -o $executable $file
+    ./$executable
+    rm $executable
+}
+
 # Search for process id
 function p(){
     
