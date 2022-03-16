@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Link dotfiles
-        run: yes | ./install.sh
+        run: rm ~/.bash_profile && ./install.sh
 
       - name: Test linking
         run: |
