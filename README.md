@@ -1,5 +1,7 @@
 # .files
 
+[![CI](https://github.com/munterfi/dotfiles/actions/workflows/ci.yml/badge.svg)](https://github.com/munterfi/dotfiles/actions/workflows/ci.yml)
+
 This repository is a personal dotfile collection. For linking use:
 
 ```bash
