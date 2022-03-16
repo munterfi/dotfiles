@@ -23,5 +23,5 @@ jobs:
 
       - name: Check successful linking of dotfiles
         run: |
-          cd
+          cd && zsh
           lla
