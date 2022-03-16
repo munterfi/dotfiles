@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  link:
+    runs-on: macos-latest
+
+    steps:
+      # Check-out repository under $GITHUB_WORKSPACE
+      - uses: actions/checkout@v2
+
+      - name: Link dotfiles
+        run: ./install.sh
+
+      - name: Test linking
+        run: |
+          ps aux
+          echo "Test1"
+          echo "Test2"
