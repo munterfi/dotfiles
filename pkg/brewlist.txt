@@ -17,6 +17,7 @@ maven
 minikube
 nmap
 node
+nvm
 openblas
 openssl
 pandoc
