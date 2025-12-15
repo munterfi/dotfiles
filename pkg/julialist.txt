@@ -1,4 +1,0 @@
-CSV
-DataFrames
-IJulia
-JSON

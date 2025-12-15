@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+#===============================================================================
+# Name          : codecat
+# Description   : Prepares a project's source code for AI context by combining
+#                 relevant files into a single, structured document.
+# Author        : munterfi <info@munterfinger.ch>
+# Date          : 2025-12-15
+# Usage         : codecat [options] [path] <ext1> <ext2>...
+#===============================================================================
+
+# --- Strict Mode ---
+set -euo pipefail
+
+# --- Global Variables ---
+readonly VERSION="0.5.0"
+
+# --- Helper Functions ---
+
+# Print an error message to stderr and exit.
+error() {
+    echo "Error: $1" >&2
+    echo "Use 'codecat --help' for usage information." >&2
+    exit 1
+}
+
+# Display the full help text.
+show_help() {
+    cat << EOF
+codecat v${VERSION}
+Prepares source code for AI context by combining files into a single document.
+
+USAGE:
+  codecat [options] [search_path] <ext1> <ext2> ...
+
+DESCRIPTION:
+  Finds all files with the specified extensions within the search path and
+  combines them into a single output file.
+
+  The generated file is optimized for AI consumption by including a context
+  header with the project's directory structure and a manifest of included files.
+
+ARGUMENTS:
+  <ext...>        One or more file extensions to search for (e.g., .py .js).
+  [search_path]   Optional: The directory to search in. Defaults to the current
+                  directory (".").
+
+OPTIONS:
+  -o, --output FILE   Specify the output file name (default: combined_code.txt).
+  -l, --list          Preview the files that would be combined, then exit.
+  -t, --tree          Preview the project's directory structure, then exit.
+  -h, --help          Display this help message and exit.
+  -v, --version       Display the script version and exit.
+
+EXAMPLES:
+  # Combine .java and .py files into 'combined_code.txt'
+  codecat .java .py
+
+  # Create 'context.txt' from .js files in the './src' directory
+  codecat -o context.txt ./src .js
+
+  # Preview which .ts and .tsx files would be included from the './app' directory
+  codecat --list ./app .ts .tsx
+EOF
+}
+
+# --- Main Execution Block ---
+main() {
+    # --- Default values and argument parsing ---
+    local search_path="."
+    local output_file="combined_code.txt"
+    local mode="combine"
+    local original_args=("$@") # Store for the context header
+    local pos_args=()
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -o|--output)
+                [[ -z "${2-}" ]] && error "Option '$1' requires an argument."
+                output_file="$2"
+                shift 2
+                ;;
+            -l|--list)
+                mode="list"
+                shift
+                ;;
+            -t|--tree)
+                mode="tree"
+                shift
+                ;;
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            -v|--version)
+                echo "codecat version $VERSION"
+                exit 0
+                ;;
+            -*)
+                error "Invalid option: $1"
+                ;;
+            *)
+                pos_args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    # --- Positional argument handling ---
+    if [[ ${#pos_args[@]} -gt 0 && -d "${pos_args[0]}" ]]; then
+        search_path="${pos_args[0]}"
+        unset 'pos_args[0]'
+        pos_args=("${pos_args[@]}")
+    fi
+
+    # The remaining arguments are file extensions
+    if [[ "$mode" == "combine" && "${#pos_args[@]}" -eq 0 ]]; then
+        error "No file extensions specified for combining."
+    fi
+    local extensions=("${pos_args[@]}")
+
+    # --- Mode Dispatch: Preview Modes ---
+    if [[ "$mode" == "tree" ]]; then
+        echo "Project directory structure of '$search_path':"
+        if command -v tree &> /dev/null; then
+            tree -d "$search_path"
+        else
+            echo "Warning: 'tree' command not found. Showing basic directory list."
+            find "$search_path" -type d
+        fi
+        exit 0
+    fi
+
+    # --- File Discovery (for 'list' and 'combine' modes) ---
+    local find_args=()
+    if [[ "${#extensions[@]}" -gt 0 ]]; then
+        for ext in "${extensions[@]}"; do
+            find_args+=(-o -name "*$ext")
+        done
+        unset 'find_args[0]' # Remove the leading '-o'
+    fi
+
+    local file_list=()
+    # Use find with -print0, sorted, to robustly handle all filenames
+    while IFS= read -r -d '' file; do
+        file_list+=("$file")
+    done < <(find "$search_path" -type f \( "${find_args[@]}" \) -print0 | sort -z)
+
+    if [[ ${#file_list[@]} -eq 0 && "${#extensions[@]}" -gt 0 ]]; then
+        echo "Warning: No files found matching the specified extensions."
+        exit 0
+    fi
+
+    if [[ "$mode" == "list" ]]; then
+        echo "Found ${#file_list[@]} files that would be combined:"
+        printf "%s\n" "${file_list[@]}"
+        exit 0
+    fi
+
+    # --- Main Action: Combine ---
+    echo "Preparing to combine ${#file_list[@]} files into '$output_file'..."
+
+    # Overwrite the output file to start clean
+    # We will build the header first, then append it
+    > "$output_file"
+
+    # --- Generate AI Context Header ---
+    echo "1. Generating project context header..."
+    {
+        echo "--- PROJECT_CONTEXT_START ---"
+        echo "This file was generated by codecat v${VERSION} on $(date)"
+        echo "Command run: codecat ${original_args[*]}"
+        echo
+        echo "--- DIRECTORY STRUCTURE ---"
+        if command -v tree &> /dev/null; then
+            tree -d "$search_path"
+        else
+            find "$search_path" -type d
+        fi
+        echo
+        echo "--- INCLUDED FILES (${#file_list[@]}) ---"
+        printf "%s\n" "${file_list[@]}"
+        echo
+        echo "--- PROJECT_CONTEXT_END ---"
+        echo -e "\n\n"
+    } >> "$output_file"
+
+    # --- Append File Contents ---
+    echo "2. Appending file contents..."
+    for file in "${file_list[@]}"; do
+        local relative_path="${file#$search_path/}"
+        relative_path="${relative_path#./}"
+
+        {
+            echo "--- FILE_START ---"
+            echo "--- PATH: $relative_path ---"
+            cat "$file"
+            echo -e "\n--- FILE_END ---\n"
+        } >> "$output_file"
+    done
+
+    echo "Success: Project context file '$output_file' has been created."
+}
+
+# Execute the main function with all provided command-line arguments
+main "$@"

@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+#===============================================================================
+# Name          : chk
+# Description   : Verifies a file against a checksum (Auto-detects algorithm).
+# Author        : munterfi <info@munterfinger.ch>
+# Date          : 2025-12-15
+# Usage         : chk <file> <hash>
+#===============================================================================
+
+set -Eeuo pipefail
+
+# --- Colors ---
+GREEN="$(tput setaf 2)"; RED="$(tput setaf 1)"; BLUE="$(tput setaf 4)"; RESET="$(tput sgr0)"
+
+# --- Validation ---
+if [[ $# -ne 2 ]]; then
+    echo "Usage: chk <file> <hash_string>"
+    exit 1
+fi
+
+FILE="$1"
+EXPECTED="${2// /}" # Remove any spaces from the hash string
+EXPECTED="${EXPECTED,,}" # Convert to lowercase
+
+if [[ ! -f "$FILE" ]]; then
+    echo "Error: File '$FILE' not found."
+    exit 1
+fi
+
+# --- Auto-Detect Algorithm by Length ---
+# MD5=32, SHA1=40, SHA256=64, SHA512=128
+length=${#EXPECTED}
+
+case $length in
+    32) algo="MD5";    cmd="md5 -q" ;;              # macOS specific
+    40) algo="SHA1";   cmd="shasum -a 1" ;;
+    64) algo="SHA256"; cmd="shasum -a 256" ;;
+    128) algo="SHA512"; cmd="shasum -a 512" ;;
+    *)
+        echo "${RED}✖ Unknown hash length ($length chars).${RESET}"
+        echo "Supported: MD5, SHA1, SHA256, SHA512."
+        exit 1
+        ;;
+esac
+
+echo -e "${BLUE}Verifying $algo...${RESET}"
+
+# --- Calculate ---
+# If using shasum, we need to strip the filename from output
+if [[ "$cmd" == "shasum"* ]]; then
+    CALCULATED=$($cmd "$FILE" | awk '{print $1}')
+else
+    CALCULATED=$($cmd "$FILE")
+fi
+
+# Ensure calculated hash is lowercase
+CALCULATED="${CALCULATED,,}"
+
+# --- Compare ---
+if [[ "$EXPECTED" == "$CALCULATED" ]]; then
+    echo -e "${GREEN}✔ Match${RESET}"
+else
+    echo -e "${RED}✖ Mismatch!${RESET}"
+    echo "Expected: $EXPECTED"
+    echo "Actual:   $CALCULATED"
+    exit 1
+fi

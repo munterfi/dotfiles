@@ -2,28 +2,36 @@ name: CI
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
-
-  # Allows you to run this workflow manually from the Actions tab
+    branches: [ main ]
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  link:
+  test:
     runs-on: macos-latest
 
     steps:
-      # Check-out repository under $GITHUB_WORKSPACE
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Link dotfiles
-        run: rm ~/.bash_profile && ./install.sh
-
-      - name: Check successful linking of dotfiles
+      - name: Bootstrap
         run: |
-          . ~/.zshrc
-          cd
-          lla | grep '>'
+          # 1. Create dummy files to skip interactive steps (SSH/Colima)
+          mkdir -p ~/.ssh ~/.colima/default
+          touch ~/.ssh/id_ed25519 ~/.colima/default/colima.yaml Brewfile
+
+          # 2. Run the script
+          ./bootstrap.sh
+
+      - name: Verify
         shell: zsh {0}
+        run: |
+          source ~/.zshrc
+          
+          # Check if ~/bin and ~/.zsh are valid symbolic links
+          if [ -L ~/bin ] && [ -L ~/.zsh ]; then
+            echo "✔ Dotfiles linked successfully"
+          else
+            echo "❌ Linking failed"
+            exit 1
+          fi

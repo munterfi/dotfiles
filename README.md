@@ -1,122 +1,60 @@
-# .files
+# Bootstrap macOS (Apple Silicon)
 
 [![CI](https://github.com/munterfi/dotfiles/actions/workflows/ci.yml/badge.svg)](https://github.com/munterfi/dotfiles/actions/workflows/ci.yml)
 
-This repository is a personal dotfile collection. For linking use:
+This repository contains a reproducible setup for configuring a macOS development environment on a Apple Silicon
+machine. It includes a Homebrew `Brewfile` and an idempotent `bootstrap.sh` script that can be safely re-run at any
+time.
 
-```bash
-git clone https://github.com/munterfi/dotfiles.git && cd "$_"
-./install.sh
-```
+The setup is automated to install tools, configure the shell, and link custom configuration files (`.zsh`, `bin`, etc.)
+from this repository.
 
-... or create the symbolic links manually (e.g. `ln -s <repository-path>/.zshrc ~/.zshrc` ).
+## Features
 
-## macOS setup
+- **Automated Setup**: A single script handles the entire installation.
+- **Package Management**: Installs and updates all CLI tools and GUI applications from the `Brewfile`.
+- **Shell Configuration**: Configures Zsh with modern tools like Starship, Zoxide, FZF, syntax highlighting, and
+  autosuggestions.
+- **Language Toolchains**:
+    - Configures multiple Java versions (via `jenv`).
+    - Installs Node LTS (via `fnm`).
+    - Sets up the Rust toolchain (via `rustup`).
+    - Sets up Python tooling (via `uv`).
+- **Containerization**: Initializes Colima for a lightweight Docker experience optimized for Apple Silicon.
+- **SSH & Git**: Generates a secure SSH key (ed25519) and configures it with the macOS Keychain if none exists.
+- **Idempotent**: The script can be run multiple times without causing issues, as it only installs missing components.
 
-Set up on macOS Monterey.
+## Usage
 
-### Homebrew
-
-```sh
-# Install
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
-
-# Update all
-brew update; brew upgrade; brew cleanup
-
-# Packages
-brew install "$(<pkg/brewlist.txt)"
-```
-
-After installing homebrew pkgs, link the dotfiles using `./install.sh` .
-For a proper display of icons download and install [Fibra Code NF](https://www.nerdfonts.com/font-downloads).
-
-### pyenv
-
-Manage python versions.
-
-```bash
-# Already added to .zshrc by linking
-# Else: echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.zshrc
-
-# List all version available to pyenv
-pyenv install --list
-
-# Use pyenv wrapper pyset to set global version
-pyset -U -r pkg/piplist.txt <version>
-
-# Tell poetry which version to use
-# (Bug: Uses homebrew python instead global pyenv version)
-poetry env use <python-version>
-```
-
-### R
-
-Install latest R version directly from [CRAN](https://cloud.r-project.org). No binary packages from CRAN are available if installed via `brew install r` . Then install packages:
-
-```bash
-Rscript -e 'install.packages(read.table("pkg/rlist.txt")[[1]], repo="https://cran.rstudio.com/")'
-
-# Configure for JupyterLab:
-Rscript -e 'devtools::install_github("IRkernel/IRkernel")'
-Rscript -e 'IRkernel::installspec()'
-```
-
-### Applications
-
-Avoid `brew cask install <PKG>` , install manually:
-
-* Hyper
-* Atom
-* LuLu
-* RStudio
-* PyCharm
-* pgAdmin4
-* Postman
-* Docker Desktop
-* VirtualBox
-* Julia
-* ImageOptim
-* JupyterLab: IPKernel for R, Python and Julia (pip install)
-* darktable
-* Affinity Designer
-* Affinity Photo
-* Cyberduck
-* QGIS
-* VLC
-* Visual Studio Code
-
-Set Google style code formatting for C++ in vscode:
+Clone the repository, enter its directory, and execute the bootstrap script.
 
 ```sh
-# macOS
-vim "$HOME/Library/Application Support/Code/User/settings.json"
-# Linux
-vim $HOME/.config/Code/User/settings.json
-
-# Insert line:
-{
-  ...,
-  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 0}",
-  ...
-}
-````
-
-## Arch Linux / CentOS
-
-Some paths have to be adjusted (e.g. julia) and some macOS specific alias should be commented out.
-Check the files manually before linking. Hint: Use `en_DK.UTF-8` in `.zshenv` .
-
-```sh
-pacman -S base-devel zsh git vim geos gdal proj r julia # or: dnf install
-git clone https://github.com/munterfi/dotfiles.git && cd "$_"
-./install.sh
+git clone https://github.com/munterfi/dotfiles.git
+cd dotfiles
+./bootstrap.sh
 ```
 
-## Thanks to
+A restart of the shell is required for all changes to be loaded correctly. The Docker environment can be started by
+running the `colima start` command.
 
-* [managing-your-dotfiles](https://www.anishathalye.com/2014/08/03/managing-your-dotfiles/)
-* [jummidark](https://github.com/jcherven/jummidark.vim) color theme for Vim
-* [mathiasbynens](https://github.com/mathiasbynens/dotfiles)
-* [anishathalye](https://github.com/anishathalye/dotfiles)
-* [jorisnoo](https://github.com/jorisnoo/dotfiles)
+All CLI tools, languages, and GUI applications are declared in the `Brewfile`. The environment is customized by editing
+this file to add or remove items. Re-running the bootstrap script will apply the changes.
+
+## Scripts
+
+This repository contains several helper scripts located in the `bin` directory, which are automatically added to the
+`$PATH`:
+
+- `chk`: Verifies a file against a checksum, auto-detecting the algorithm (MD5, SHA1, SHA256).
+- `codecat`: Prepares a project's source code for AI context by combining relevant files into a single, structured
+  document.
+- `git-id`: Switches the local Git `user.name` and `user.email` between "Personal" and "Work" profiles.
+- `mkscr`: Interactively generates an executable script with a standardized header for various languages.
+
+## Thanks To
+
+This setup was inspired by the work and ideas from other developers and their dotfiles repositories:
+
+- [mathiasbynens](https://github.com/mathiasbynens/dotfiles)
+- [anishathalye](https://github.com/anishathalye/dotfiles)
+- [jorisnoo](https://github.com/jorisnoo/dotfiles)
