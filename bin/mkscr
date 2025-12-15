@@ -5,27 +5,26 @@
 #                 standardized header, correct shebang, and version info.
 # Author        : munterfi <info@munterfinger.ch>
 # Date          : 2025-12-15
-# Version       : 3.0.0
+# Version       : 3.1.0
 # Usage         : mkscr
 #===============================================================================
 
-set -Eeuo pipefail
+# Exit immediately if a command exits with a non-zero status.
+set -e
 
 # --- Configuration ---
 # Colors
 BLUE="$(tput setaf 4)"
 GREEN="$(tput setaf 2)"
 YELLOW="$(tput setaf 3)"
-RED="$(tput setaf 1)"
 RESET="$(tput sgr0)"
 
 # Layout
 DIV_LINE_1="-----------------------------------------------------------------------------"
 DIV_LINE_2="============================================================================="
 
-# --- Language Definitions (Easy to extend) ---
-# Format: "Display Name"
-LANG_OPTIONS=("Bash" "Zsh" "Python" "R" "Julia")
+# --- Language Definitions (Using Bash 4+ Associative Arrays) ---
+LANG_OPTIONS=("Bash" "Zsh" "Python" "R")
 
 declare -A EXTENSIONS
 EXTENSIONS=(
@@ -33,7 +32,6 @@ EXTENSIONS=(
     ["Zsh"]="sh"
     ["Python"]="py"
     ["R"]="R"
-    ["Julia"]="jl"
 )
 
 declare -A BINARIES
@@ -42,23 +40,21 @@ BINARIES=(
     ["Zsh"]="zsh"
     ["Python"]="python3"
     ["R"]="Rscript"
-    ["Julia"]="julia"
 )
 
 # --- Helper Functions ---
 
-log_info()  { echo -e "${BLUE}ℹ${RESET} $*"; }
+log_info()  { echo -e "\n${BLUE}ℹ${RESET} $*"; }
 log_warn()  { echo -e "${YELLOW}⚠${RESET} $*"; }
-log_error() { echo -e "${RED}✖${RESET} $*"; exit 1; }
 
 get_tool_version() {
     local cmd="$1"
+    local version_string=""
     if command -v "$cmd" &>/dev/null; then
-        # Robustly extract the first occurrence of a version number (e.g., 5.0.17)
-        "$cmd" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -n1
-    else
-        echo "Not Installed"
+        # '|| true' ensures the pipeline succeeds even if grep finds no match
+        version_string=$("$cmd" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -n1 || true)
     fi
+    echo "${version_string:-Not Found}"
 }
 
 # --- Main Logic ---
@@ -69,38 +65,33 @@ main() {
 
     # 1. Select Language
     echo "Select a language:"
-    PS3="> " # Prompt character
-    local lang
-    local interpreter
-    local ext
-    local tool_ver
+    PS3="> " # Prompt character for the select menu
+    local lang interpreter ext tool_ver
 
     select opt in "${LANG_OPTIONS[@]}"; do
         if [[ -n "$opt" ]]; then
             lang="$opt"
-            interpreter="${BINARIES[$lang]}"
-            ext="${EXTENSIONS[$lang]}"
+            interpreter="${BINARIES[$opt]}"
+            ext="${EXTENSIONS[$opt]}"
             break
         else
-            log_warn "Invalid selection."
+            log_warn "Invalid selection. Please try again."
         fi
     done
 
-    # Get version of the selected tool
     tool_ver="$(get_tool_version "$interpreter")"
-    log_info "Detected $lang version: $tool_ver"
+    log_info "Selected $lang ($tool_ver)"
     echo ""
 
-    # 2. Script Name
-    local name_input
-    local filename
-
+    # 2. Script Name (Robust Input)
+    local name_input filename
     while true; do
-        read -r -p "Enter script name (without extension): " name_input
+        printf "Enter script name (without extension): "
+        read -r name_input
 
-        # Sanitize: lowercase and replace spaces with underscores
-        name_input="${name_input,,}"
-        name_input="${name_input// /_}"
+        # Sanitize using Bash 4+ parameter expansion
+        name_input="${name_input,,}" # lowercase
+        name_input="${name_input// /_}" # replace spaces with underscores
 
         if [[ -z "$name_input" ]]; then
             log_warn "Name cannot be empty."
@@ -117,25 +108,27 @@ main() {
     done
 
     # 3. Metadata Inputs (with defaults)
-    local description
-    local author
-    local version
-    local current_date
+    local description author version current_date
 
-    # Get Git user or fallback to system user
     local git_user
     git_user="$(git config user.name 2>/dev/null) <$(git config user.email 2>/dev/null)>"
     [[ "$git_user" == " <>" ]] && git_user="$(whoami)"
 
     echo ""
-    read -r -p "Description: " description
-    read -r -e -i "$git_user" -p "Author: " author
-    read -r -e -i "0.1.0" -p "Version: " version
+    printf "Description: "
+    read -r description
+
+    printf "Author [%s]: " "$git_user"
+    read -r author_input
+    author="${author_input:-$git_user}"
+
+    printf "Version [0.1.0]: "
+    read -r version_input
+    version="${version_input:-0.1.0}"
 
     current_date="$(date +%Y-%m-%d)"
 
     # 4. Generate File Content
-    # Using HEREDOC for cleaner template generation
     cat <<EOF > "$filename"
 #!/usr/bin/env $interpreter
 # $DIV_LINE_1
@@ -153,17 +146,11 @@ main() {
 
 EOF
 
-    # 5. Finalize
+    # 5. Finalize and Open
     chmod +x "$filename"
     log_info "Created executable: $filename"
 
-    # 6. Open Editor
-    # Uses system EDITOR variable, falls back to vim +13 (cursor at code start)
-    if [[ -n "${EDITOR:-}" ]]; then
-        $EDITOR "$filename"
-    else
-        vim +13 "$filename"
-    fi
+    ${EDITOR:-vim} +15 "$filename"
 }
 
 main

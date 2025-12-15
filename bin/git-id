@@ -35,7 +35,7 @@ echo -e "Current: ${YELLOW}$curr_name${RESET} <${YELLOW}$curr_email${RESET}>\n"
 PS3="> Select profile: "
 options=("Personal ($MY_PERSONAL_EMAIL)" "Work (Manual Input)" "Cancel")
 
-select opt in "${options[@]}"; do
+select _ in "${options[@]}"; do
     case "$REPLY" in
         1) # Personal
             new_email="$MY_PERSONAL_EMAIL"

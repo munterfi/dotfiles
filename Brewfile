@@ -1,5 +1,6 @@
 # --- Shell ---
 brew "git"
+brew "bash"
 brew "starship"
 brew "zoxide"
 brew "fzf"
