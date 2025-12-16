@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 #===============================================================================
 # Name          : git-id
-# Description   : Secure, production-ready Git identity manager.
-#                 Uses git-config storage backend for safety.
+# Description   : Git identity manager, uses git-config storage backend.
 # Author        : munterfi <info@munterfinger.ch>
 # Date          : 2025-12-16
 # Version       : 2.3.0
