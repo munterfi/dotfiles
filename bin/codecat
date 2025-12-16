@@ -4,202 +4,344 @@
 # Description   : Prepares a project's source code for AI context by combining
 #                 relevant files into a single, structured document.
 # Author        : munterfi <info@munterfinger.ch>
-# Date          : 2025-12-15
-# Usage         : codecat [options] [path] <ext1> <ext2>...
+# Date          : 2025-12-16
+# Version       : 2.1.7
+# Usage         : codecat [options] <path> [ext1 ext2 ...]
 #===============================================================================
 
 # --- Strict Mode ---
-set -euo pipefail
+set -o errexit
+set -o nounset
+set -o pipefail
+set -o errtrace
 
-# --- Global Variables ---
-readonly VERSION="0.5.0"
+# --- Globals ---
+readonly VERSION="2.1.7"
+readonly ORIGINAL_ARGS=("$@")
 
-# --- Helper Functions ---
+declare -a file_list=()           # paths relative to <path>
+search_path_abs_global=""         # absolute path of <path>
+debug=0
+TEMP_HEADER=""
 
-# Print an error message to stderr and exit.
+# Cleanup trap (safe with set -u)
+cleanup() {
+    if [[ -n "${TEMP_HEADER:-}" ]]; then
+        rm -f "$TEMP_HEADER" || true
+    fi
+}
+trap cleanup EXIT
+
+# --- Error trap ---------------------------------------------------------------
+on_error() {
+    local exit_code=$?
+    printf '[error] Command failed (exit %d) at line %d: %s\n' "$exit_code" "${BASH_LINENO[0]}" "${BASH_COMMAND}" >&2
+    printf "Use 'codecat --help' for usage information.\n" >&2
+    exit "$exit_code"
+}
+trap on_error ERR
+
+# --- Helpers ------------------------------------------------------------------
+
 error() {
-    echo "Error: $1" >&2
-    echo "Use 'codecat --help' for usage information." >&2
+    printf 'Error: %s\n' "$1" >&2
+    printf "Use 'codecat --help' for usage information.\n" >&2
     exit 1
 }
 
-# Display the full help text.
+log() { printf '%s\n' "$*"; }
+
+# Never return non-zero from dbg (avoid set -e/ERR trap)
+dbg() {
+    if (( debug )); then
+        printf '[debug] %s\n' "$*" >&2
+    fi
+    return 0
+}
+
 show_help() {
-    cat << EOF
-codecat v${VERSION}
-Prepares source code for AI context by combining files into a single document.
+    cat << 'EOF'
+codecat
+Prepares source code for AI context by combining selected files into a single document.
 
 USAGE:
-  codecat [options] [search_path] <ext1> <ext2> ...
+  codecat [options] <path> [ext1 ext2 ...]
 
 DESCRIPTION:
-  Finds all files with the specified extensions within the search path and
-  combines them into a single output file.
+  - Git repository:
+      * Only Git-tracked files are considered.
+      * With extensions: only tracked files matching extensions are included.
+      * Without extensions: all tracked files under <path> are included.
+      * If <path> is a subdirectory of the repo, selection is restricted to that subdir.
 
-  The generated file is optimized for AI consumption by including a context
-  header with the project's directory structure and a manifest of included files.
+  - Non-Git path:
+      * At least one extension is required.
+      * Files are discovered via filesystem search under <path>.
+      * .git directories are pruned automatically.
 
-ARGUMENTS:
-  <ext...>        One or more file extensions to search for (e.g., .py .js).
-  [search_path]   Optional: The directory to search in. Defaults to the current
-                  directory (".").
+OUTPUT CONTENTS:
+  - Pruned directory tree rooted at "."
+  - Manifest of included files (relative to <path>)
+  - Each file’s content wrapped in delimiters
 
 OPTIONS:
-  -o, --output FILE   Specify the output file name (default: combined_code.txt).
-  -l, --list          Preview the files that would be combined, then exit.
-  -t, --tree          Preview the project's directory structure, then exit.
-  -h, --help          Display this help message and exit.
-  -v, --version       Display the script version and exit.
+  -o, --output FILE   Output file (default: combined_code.txt)
+  -l, --list          List files that would be included, then exit
+  -t, --tree          Show pruned directory tree, then exit
+  --debug             Enable debug logging (or set CODECAT_DEBUG=1)
+  -h, --help          Show this help and exit
+  -v, --version       Show version and exit
 
-EXAMPLES:
-  # Combine .java and .py files into 'combined_code.txt'
-  codecat .java .py
-
-  # Create 'context.txt' from .js files in the './src' directory
-  codecat -o context.txt ./src .js
-
-  # Preview which .ts and .tsx files would be included from the './app' directory
-  codecat --list ./app .ts .tsx
+NOTES:
+  - Internally uses NUL-delimited discovery for robustness.
+  - Listing/tree prints newline-delimited paths (newline in filenames is pathological).
+  - Extension matching is case-sensitive (".py" ≠ ".PY").
 EOF
 }
 
-# --- Main Execution Block ---
+canonicalize_path() {
+    local p="$1" saved
+    saved=$(pwd -P)
+    cd "$p" >/dev/null 2>&1 || error "Cannot access path: $p"
+    pwd -P
+    cd "$saved" >/dev/null 2>&1 || true
+}
+
+is_git_worktree() { git -C "$1" rev-parse --is-inside-work-tree >/dev/null 2>&1; }
+git_toplevel()    { git -C "$1" rev-parse --show-toplevel; }
+
+# Normalize extensions to two arrays:
+# - ext_norm: literal suffixes like ".py" (used for literal ends-with matching)
+# - ext_patterns: glob patterns like "*.py" (used with find -name)
+normalize_extensions() {
+    ext_norm=()
+    ext_patterns=()
+    local ext
+    for ext in "$@"; do
+        [[ "$ext" != .* ]] && ext=".$ext"
+        ext_norm+=("$ext")
+        ext_patterns+=("*$ext")
+    done
+    dbg "Normalized extensions: ${ext_norm[*]}"
+}
+
+# Literal ends-with check (no glob semantics)
+endswith() {
+    local str="$1" suf="$2"
+    # If suffix longer than string, cannot match
+    if (( ${#str} < ${#suf} )); then
+        return 1
+    fi
+    # Compare the trailing slice literally
+    [[ "${str: -${#suf}}" == "$suf" ]]
+}
+
+print_pruned_tree() {
+    printf ".\n"
+    [[ $# -eq 0 ]] && return
+    printf "%s\n" "$@" | LC_ALL=C sort -u | awk -F'/' '
+        NF > 1 {
+            path=""
+            for (i=1;i<=NF-1;i++) {
+                path = path $i "/"
+                if (!seen[path]++) {
+                    indent=""
+                    for (j=1;j<i;j++) indent=indent "  "
+                    print indent $i "/"
+                }
+            }
+        }'
+}
+
+# --- File Discovery -----------------------------------------------------------
+
+discover_files() {
+    local search_path="$1"; shift
+    local extensions=("$@")
+    file_list=()
+
+    local search_abs
+    search_abs=$(canonicalize_path "$search_path")
+    search_path_abs_global="$search_abs"
+    dbg "search_path_abs=$search_path_abs_global"
+
+    if is_git_worktree "$search_abs"; then
+        dbg "Git worktree detected."
+        local repo_root repo_abs rel_prefix
+        repo_root=$(git_toplevel "$search_abs") || error "Failed to get Git repo root"
+        repo_abs=$(canonicalize_path "$repo_root")
+        rel_prefix=$(git -C "$search_abs" rev-parse --show-prefix 2>/dev/null || true)
+        dbg "repo_root=$repo_abs rel_prefix=${rel_prefix:-<repo-root>}"
+
+        local -a tracked_rel=()
+        if [[ -n "$rel_prefix" ]]; then
+            mapfile -d '' tracked_rel < <(git -C "$repo_abs" ls-files -z -- "$rel_prefix") || true
+        else
+            mapfile -d '' tracked_rel < <(git -C "$repo_abs" ls-files -z) || true
+        fi
+        dbg "Tracked count: ${#tracked_rel[@]}"
+
+        local use_ext_filter=0
+        if [[ ${#extensions[@]} -gt 0 ]]; then
+            use_ext_filter=1
+            normalize_extensions "${extensions[@]}"
+        fi
+
+        local p abs rel ok ext
+        for p in "${tracked_rel[@]}"; do
+            abs="$repo_abs/$p"
+            if [[ -n "$rel_prefix" && "$abs" != "$search_abs"/* ]]; then
+                continue
+            fi
+            rel="${abs#"$search_abs"/}"
+            if [[ $use_ext_filter -eq 1 ]]; then
+                ok=0
+                for ext in "${ext_norm[@]}"; do
+                    if endswith "$rel" "$ext"; then
+                        ok=1; break
+                    fi
+                done
+                if [[ $ok -eq 0 ]]; then
+                    continue
+                fi
+            fi
+            file_list+=("$rel")
+        done
+    else
+        dbg "Non-Git path."
+        if [[ ${#extensions[@]} -eq 0 ]]; then
+            error "Non-Git directory requires at least one file extension."
+        fi
+
+        normalize_extensions "${extensions[@]}"
+        local find_cmd=(find "$search_abs" -type f -not -path '*/.git/*' \( )
+        local i=0 pat
+        for pat in "${ext_patterns[@]}"; do
+            if [[ $i -gt 0 ]]; then
+                find_cmd+=(-o)
+            fi
+            find_cmd+=(-name "$pat")
+            ((i++))
+        done
+        find_cmd+=(\) -print0)
+        dbg "Running: ${find_cmd[*]}"
+
+        local -a abs_files=()
+        mapfile -d '' abs_files < <("${find_cmd[@]}") || true
+
+        local f rel
+        for f in "${abs_files[@]}"; do
+            rel="${f#"$search_abs"/}"
+            file_list+=("$rel")
+        done
+    fi
+
+    log "Found ${#file_list[@]} file(s)."
+    if (( ${#file_list[@]} == 0 )); then
+        error "No matching files found."
+    fi
+}
+
+# --- Main ---------------------------------------------------------------------
+
 main() {
-    # --- Default values and argument parsing ---
-    local search_path="."
     local output_file="combined_code.txt"
     local mode="combine"
-    local original_args=("$@") # Store for the context header
-    local pos_args=()
+    local -a pos_args=()
+
+    [[ "${CODECAT_DEBUG:-0}" == "1" ]] && debug=1
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
             -o|--output)
-                [[ -z "${2-}" ]] && error "Option '$1' requires an argument."
-                output_file="$2"
-                shift 2
-                ;;
+                if [[ -z "${2-}" ]]; then error "Option '$1' requires an argument."; fi
+                output_file="$2"; shift 2 ;;
             -l|--list)
-                mode="list"
-                shift
-                ;;
+                mode="list"; shift ;;
             -t|--tree)
-                mode="tree"
-                shift
-                ;;
+                mode="tree"; shift ;;
+            --debug)
+                debug=1; shift ;;
             -h|--help)
-                show_help
-                exit 0
-                ;;
+                show_help; exit 0 ;;
             -v|--version)
-                echo "codecat version $VERSION"
-                exit 0
-                ;;
+                printf "codecat %s\n" "$VERSION"; exit 0 ;;
             -*)
-                error "Invalid option: $1"
-                ;;
+                error "Unknown option: $1" ;;
             *)
-                pos_args+=("$1")
-                shift
-                ;;
+                pos_args+=("$1"); shift ;;
         esac
     done
 
-    # --- Positional argument handling ---
-    if [[ ${#pos_args[@]} -gt 0 && -d "${pos_args[0]}" ]]; then
-        search_path="${pos_args[0]}"
-        unset 'pos_args[0]'
-        pos_args=("${pos_args[@]}")
+    if (( ${#pos_args[@]} < 1 )); then
+        error "Missing required <path> argument."
+    fi
+    local search_path="${pos_args[0]}"
+    if [[ ! -d "$search_path" ]]; then
+        error "'$search_path' is not a directory."
+    fi
+    local -a extensions=()
+    if (( ${#pos_args[@]} > 1 )); then
+        extensions=("${pos_args[@]:1}")
     fi
 
-    # The remaining arguments are file extensions
-    if [[ "$mode" == "combine" && "${#pos_args[@]}" -eq 0 ]]; then
-        error "No file extensions specified for combining."
-    fi
-    local extensions=("${pos_args[@]}")
-
-    # --- Mode Dispatch: Preview Modes ---
-    if [[ "$mode" == "tree" ]]; then
-        echo "Project directory structure of '$search_path':"
-        if command -v tree &> /dev/null; then
-            tree -d "$search_path"
-        else
-            echo "Warning: 'tree' command not found. Showing basic directory list."
-            find "$search_path" -type d
-        fi
-        exit 0
-    fi
-
-    # --- File Discovery (for 'list' and 'combine' modes) ---
-    local find_args=()
-    if [[ "${#extensions[@]}" -gt 0 ]]; then
-        for ext in "${extensions[@]}"; do
-            find_args+=(-o -name "*$ext")
-        done
-        unset 'find_args[0]' # Remove the leading '-o'
-    fi
-
-    local file_list=()
-    # Use find with -print0, sorted, to robustly handle all filenames
-    while IFS= read -r -d '' file; do
-        file_list+=("$file")
-    done < <(find "$search_path" -type f \( "${find_args[@]}" \) -print0 | sort -z)
-
-    if [[ ${#file_list[@]} -eq 0 && "${#extensions[@]}" -gt 0 ]]; then
-        echo "Warning: No files found matching the specified extensions."
-        exit 0
-    fi
+    log "Discovering files in '$search_path'..."
+    discover_files "$search_path" "${extensions[@]}"
 
     if [[ "$mode" == "list" ]]; then
-        echo "Found ${#file_list[@]} files that would be combined:"
         printf "%s\n" "${file_list[@]}"
         exit 0
     fi
+    if [[ "$mode" == "tree" ]]; then
+        print_pruned_tree "${file_list[@]}"
+        exit 0
+    fi
 
-    # --- Main Action: Combine ---
-    echo "Preparing to combine ${#file_list[@]} files into '$output_file'..."
+    log "Combining ${#file_list[@]} file(s) into '$output_file'..."
 
-    # Overwrite the output file to start clean
-    # We will build the header first, then append it
-    > "$output_file"
-
-    # --- Generate AI Context Header ---
-    echo "1. Generating project context header..."
+    # Header
+    TEMP_HEADER=$(mktemp)
     {
-        echo "--- PROJECT_CONTEXT_START ---"
-        echo "This file was generated by codecat v${VERSION} on $(date)"
-        echo "Command run: codecat ${original_args[*]}"
-        echo
-        echo "--- DIRECTORY STRUCTURE ---"
-        if command -v tree &> /dev/null; then
-            tree -d "$search_path"
-        else
-            find "$search_path" -type d
-        fi
-        echo
-        echo "--- INCLUDED FILES (${#file_list[@]}) ---"
+        printf "%s\n" "--- PROJECT_CONTEXT_START ---"
+        printf "Generated by codecat v%s on %s\n" "$VERSION" "$(date)"
+        printf "Command: codecat"
+        local arg
+        for arg in "${ORIGINAL_ARGS[@]}"; do
+            printf " %q" "$arg"
+        done
+        printf "\n\n"
+
+        printf "%s\n" "--- DIRECTORY STRUCTURE (PRUNED) ---"
+        print_pruned_tree "${file_list[@]}"
+        printf "\n"
+
+        printf "%s (%d)\n" "--- INCLUDED FILES ---" "${#file_list[@]}"
         printf "%s\n" "${file_list[@]}"
-        echo
-        echo "--- PROJECT_CONTEXT_END ---"
-        echo -e "\n\n"
-    } >> "$output_file"
+        printf "\n%s\n\n\n" "--- PROJECT_CONTEXT_END ---"
+    } > "$TEMP_HEADER"
 
-    # --- Append File Contents ---
-    echo "2. Appending file contents..."
-    for file in "${file_list[@]}"; do
-        local relative_path="${file#$search_path/}"
-        relative_path="${relative_path#./}"
+    # Write header
+    cat "$TEMP_HEADER" > "$output_file"
+    if [[ ! -f "$output_file" ]]; then
+        error "Failed to create output file: $output_file"
+    fi
 
+    # Append file contents; warn on unreadable files and continue
+    log "Appending file contents..."
+    local rel file_abs
+    for rel in "${file_list[@]}"; do
+        file_abs="$search_path_abs_global/$rel"
         {
-            echo "--- FILE_START ---"
-            echo "--- PATH: $relative_path ---"
-            cat "$file"
-            echo -e "\n--- FILE_END ---\n"
+            printf "%s\n" "--- FILE_START ---"
+            printf "%s %s %s\n" "--- PATH:" "$rel" "---"
+            if ! cat "$file_abs"; then
+                printf "[warning] Could not read file: %s\n" "$file_abs" >&2
+            fi
+            printf "\n%s\n\n" "--- FILE_END ---"
         } >> "$output_file"
     done
 
-    echo "Success: Project context file '$output_file' has been created."
+    printf "Success: '%s' created.\n" "$output_file"
 }
 
-# Execute the main function with all provided command-line arguments
 main "$@"
