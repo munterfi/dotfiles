@@ -5,7 +5,7 @@
 #                 Uses git-config storage backend for safety.
 # Author        : munterfi <info@munterfinger.ch>
 # Date          : 2025-12-16
-# Version       : 2.0.1
+# Version       : 2.1.0
 # Usage         : git-id <command> [args]
 #===============================================================================
 
@@ -23,10 +23,11 @@ if [[ -t 1 ]]; then
     readonly GREEN=$(tput setaf 2)
     readonly YELLOW=$(tput setaf 3)
     readonly RED=$(tput setaf 1)
+    readonly GREY=$(tput setaf 8)
     readonly BOLD=$(tput bold)
     readonly RESET=$(tput sgr0)
 else
-    readonly BLUE="" GREEN="" YELLOW="" RED="" BOLD="" RESET=""
+    readonly BLUE="" GREEN="" YELLOW="" RED="" GREY="" BOLD="" RESET=""
 fi
 
 # --- Helpers ------------------------------------------------------------------
@@ -198,6 +199,57 @@ cmd_use() {
     success "Identity applied successfully."
 }
 
+cmd_get() {
+    ensure_git_repo
+
+    local name email key format source
+    # Check if local config is set to determine if we are using an override or global
+    if "$GIT_EXEC" config --local --get user.email >/dev/null 2>&1; then
+        source="${GREEN}(local override)${RESET}"
+    else
+        source="${GREY}(global default)${RESET}"
+    fi
+
+    name=$("$GIT_EXEC" config --get user.name || echo "N/A")
+    email=$("$GIT_EXEC" config --get user.email || echo "N/A")
+    key=$("$GIT_EXEC" config --get user.signingkey || echo "")
+    format=$("$GIT_EXEC" config --get gpg.format || echo "")
+
+    printf "%sCurrent Identity %s:%s\n" "$BOLD" "$source" "$RESET"
+    printf "  Name:   %s%s%s\n" "$YELLOW" "$name" "$RESET"
+    printf "  Email:  %s%s%s\n" "$YELLOW" "$email" "$RESET"
+
+    if [[ -n "$key" ]]; then
+        printf "  Key:    %s\n" "$key"
+        printf "  Format: %s\n" "$format"
+
+        if [[ $("$GIT_EXEC" config --get commit.gpgsign) == "true" ]]; then
+             printf "  Sign:   %sEnabled%s\n" "$GREEN" "$RESET"
+        else
+             printf "  Sign:   %sDisabled%s\n" "$RED" "$RESET"
+        fi
+    fi
+}
+
+cmd_delete() {
+    local profile="$1"
+    [[ -n "$profile" ]] || die "Profile name required."
+    validate_profile_name "$profile"
+
+    local profile_file
+    profile_file=$(get_profile_path "$profile")
+
+    if [[ ! -f "$profile_file" ]]; then
+        die "Profile '$profile' not found."
+    fi
+
+    printf "Are you sure you want to delete profile '%s%s%s'?\n" "$BOLD" "$profile" "$RESET"
+    confirm "Delete permanently?" || exit 0
+
+    rm -f "$profile_file"
+    success "Profile '$profile' deleted."
+}
+
 cmd_list() {
     if [[ ! -d "$STORE_DIR" ]]; then
         info "No profiles found."
@@ -240,8 +292,10 @@ usage() {
 ${BOLD}git-id${RESET} - Git Identity Manager
 
 ${BOLD}USAGE:${RESET}
-  git-id set <profile>   Create or update a profile
+  git-id get             Show current repository identity
   git-id use <profile>   Apply profile to current repository
+  git-id set <profile>   Create or update a profile
+  git-id delete <name>   Delete a profile
   git-id list            List available profiles
 
 ${BOLD}DETAILS:${RESET}
@@ -258,9 +312,11 @@ cmd=${1:-}
 arg=${2:-}
 
 case "$cmd" in
-    set)  cmd_set "$arg" ;;
-    use)  cmd_use "$arg" ;;
-    list) cmd_list ;;
+    get)    cmd_get ;;
+    set)    cmd_set "$arg" ;;
+    use)    cmd_use "$arg" ;;
+    delete) cmd_delete "$arg" ;;
+    list)   cmd_list ;;
     -h|--help) usage ;;
     *)
         if [[ -z "$cmd" ]]; then
