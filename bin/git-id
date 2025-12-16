@@ -4,8 +4,8 @@
 # Description   : Secure, production-ready Git identity manager.
 #                 Uses git-config storage backend for safety.
 # Author        : munterfi <info@munterfinger.ch>
-# Date          : 2025-12-15
-# Version       : 2.0.0
+# Date          : 2025-12-16
+# Version       : 2.0.1
 # Usage         : git-id <command> [args]
 #===============================================================================
 
@@ -216,10 +216,8 @@ cmd_list() {
     while IFS= read -r -d '' file; do
         local filename
         filename=$(basename "$file")
-        local profile_name="${filename}" # Config files handled by git don't strictly need extensions, but we use directory listing
+        local profile_name="${filename}"
 
-        # We previously used just the filename.
-        # Since 'git config' creates clean files, we can just list them.
         local p_name
         p_name=$(read_config "$file" "user.name")
         local p_email
@@ -233,7 +231,7 @@ cmd_list() {
             color="$GREEN"
         fi
 
-        printf "%s%s%s%s <%s>\n" "$color" "$prefix" "$profile_name" "$RESET" "$p_email"
+        printf "%s%s%s%s %s <%s>\n" "$color" "$prefix" "$profile_name" "$RESET" "$p_name" "$p_email"
     done < <(find "$STORE_DIR" -type f -not -name '.*' -print0 2>/dev/null | sort -z)
 }
 
