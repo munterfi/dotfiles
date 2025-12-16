@@ -4,6 +4,7 @@
 # Description   : Verifies a file against a checksum (Auto-detects algorithm).
 # Author        : munterfi <info@munterfinger.ch>
 # Date          : 2025-12-15
+# Version       : 2.0.0
 # Usage         : chk <file> <hash>
 #===============================================================================
 

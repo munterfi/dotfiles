@@ -2,6 +2,9 @@
   <dictionary name="project">
     <words>
       <w>codecat</w>
+      <w>mkscr</w>
+      <w>shasum</w>
+      <w>signingkey</w>
     </words>
   </dictionary>
 </component>

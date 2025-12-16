@@ -1,68 +1,275 @@
 #!/usr/bin/env bash
 #===============================================================================
 # Name          : git-id
-# Description   : Context switcher for Git author identity.
-#                 Safe for public dotfiles (prompts for private/work email).
+# Description   : Secure, production-ready Git identity manager.
+#                 Uses git-config storage backend for safety.
 # Author        : munterfi <info@munterfinger.ch>
 # Date          : 2025-12-15
-# Usage         : git id
+# Version       : 2.0.0
+# Usage         : git-id <command> [args]
 #===============================================================================
 
+# --- Strict Mode ---
 set -Eeuo pipefail
 
-# --- Configuration (Public Info Only) ---
-MY_NAME="Merlin Unterfinger"
-MY_PERSONAL_EMAIL="info@munterfinger.ch"
+# --- Configuration ---
+readonly XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+readonly STORE_DIR="$XDG_CONFIG_HOME/git-id/profiles"
+readonly GIT_EXEC="git"
 
 # --- Styling ---
-BLUE="$(tput setaf 4)"; GREEN="$(tput setaf 2)"; YELLOW="$(tput setaf 3)"; RESET="$(tput sgr0)"
-
-# --- Pre-flight Checks ---
-# Ensure we are inside a git repository
-if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    echo "Error: Not a git repository."
-    exit 1
+if [[ -t 1 ]]; then
+    readonly BLUE=$(tput setaf 4)
+    readonly GREEN=$(tput setaf 2)
+    readonly YELLOW=$(tput setaf 3)
+    readonly RED=$(tput setaf 1)
+    readonly BOLD=$(tput bold)
+    readonly RESET=$(tput sgr0)
+else
+    readonly BLUE="" GREEN="" YELLOW="" RED="" BOLD="" RESET=""
 fi
 
-# Get current local config (or global if local isn't set)
-curr_name=$(git config user.name || echo "Unset")
-curr_email=$(git config user.email || echo "Unset")
+# --- Helpers ------------------------------------------------------------------
 
-# --- UI & Logic ---
-echo -e "${BLUE}Git Identity Manager${RESET}"
-echo -e "Current: ${YELLOW}$curr_name${RESET} <${YELLOW}$curr_email${RESET}>\n"
+die() {
+    printf "%s[error]%s %s\n" "$RED" "$RESET" "$*" >&2
+    exit 1
+}
 
-PS3="> Select profile: "
-options=("Personal ($MY_PERSONAL_EMAIL)" "Work (Manual Input)" "Cancel")
+info() {
+    printf "%s[info]%s %s\n" "$BLUE" "$RESET" "$*"
+}
 
-select _ in "${options[@]}"; do
-    case "$REPLY" in
-        1) # Personal
-            new_email="$MY_PERSONAL_EMAIL"
-            break
-            ;;
-        2) # Work
-            echo -e "\nEnter work email:"
-            read -r new_email
-            if [[ -z "$new_email" ]]; then
-                echo "Email cannot be empty."
-                exit 1
-            fi
-            break
-            ;;
-        3) # Cancel
-            echo "Cancelled."
-            exit 0
-            ;;
-        *)
-            echo "Invalid option."
-            ;;
-    esac
-done
+success() {
+    printf "%s[success]%s %s\n" "$GREEN" "$RESET" "$*"
+}
 
-# --- Apply & Verify ---
-# We assume Name is the same for both. If not, ask for name in the Work block too.
-git config user.name "$MY_NAME"
-git config user.email "$new_email"
+# Check dependencies
+check_deps() {
+    if ! command -v "$GIT_EXEC" >/dev/null 2>&1; then
+        die "Git is required but not installed."
+    fi
+}
 
-echo -e "\n${GREEN}✔ Identity updated:${RESET} $MY_NAME <$new_email>"
+# Validates profile name to prevent path traversal
+validate_profile_name() {
+    local name="$1"
+    if [[ ! "$name" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        die "Invalid profile name: '$name'. Use alphanumeric, dashes, or underscores."
+    fi
+}
+
+get_profile_path() {
+    echo "$STORE_DIR/$1"
+}
+
+ensure_git_repo() {
+    "$GIT_EXEC" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+        || die "Not inside a git repository."
+}
+
+confirm() {
+    local prompt="$1"
+    read -r -p "${prompt} [y/N] " reply
+    [[ "$reply" =~ ^[Yy]$ ]]
+}
+
+# --- Core Logic ---------------------------------------------------------------
+
+# Read a value from a specific profile file safely using git config
+read_config() {
+    local profile_file="$1"
+    local key="$2"
+    "$GIT_EXEC" config -f "$profile_file" --get "$key" || echo ""
+}
+
+# Write a value to a specific profile file safely
+write_config() {
+    local profile_file="$1"
+    local key="$2"
+    local value="$3"
+
+    if [[ -n "$value" ]]; then
+        "$GIT_EXEC" config -f "$profile_file" "$key" "$value"
+    else
+        # If value is empty, unset the key
+        "$GIT_EXEC" config -f "$profile_file" --unset "$key" >/dev/null 2>&1 || true
+    fi
+}
+
+cmd_set() {
+    local profile="$1"
+    [[ -n "$profile" ]] || die "Profile name required."
+    validate_profile_name "$profile"
+
+    mkdir -p "$STORE_DIR"
+    local profile_file
+    profile_file=$(get_profile_path "$profile")
+
+    # Load existing values
+    local cur_name cur_email cur_key cur_format
+    cur_name=$(read_config "$profile_file" "user.name")
+    cur_email=$(read_config "$profile_file" "user.email")
+    cur_key=$(read_config "$profile_file" "user.signingkey")
+    cur_format=$(read_config "$profile_file" "gpg.format")
+
+    printf "%sConfiguring profile: %s%s\n" "$BOLD" "$profile" "$RESET"
+
+    # Interactive Prompts
+    read -r -p "Name [${cur_name}]: " input_name
+    local new_name="${input_name:-$cur_name}"
+    [[ -n "$new_name" ]] || die "Name cannot be empty."
+
+    read -r -p "Email [${cur_email}]: " input_email
+    local new_email="${input_email:-$cur_email}"
+    [[ -n "$new_email" ]] || die "Email cannot be empty."
+
+    read -r -p "Signing Key (optional) [${cur_key}]: " input_key
+    local new_key="${input_key:-$cur_key}"
+
+    # Only ask for format if a key is provided
+    local new_format="$cur_format"
+    if [[ -n "$new_key" ]]; then
+         read -r -p "Key Format (openpgp/ssh/x509) [${cur_format:-openpgp}]: " input_format
+         new_format="${input_format:-${cur_format:-openpgp}}"
+    fi
+
+    # Display Summary
+    printf "\n%sSummary:%s\n" "$BOLD" "$RESET"
+    printf "  Name:   %s%s%s\n" "$YELLOW" "$new_name" "$RESET"
+    printf "  Email:  %s%s%s\n" "$YELLOW" "$new_email" "$RESET"
+    if [[ -n "$new_key" ]]; then
+        printf "  Key:    %s\n" "$new_key"
+        printf "  Format: %s\n" "$new_format"
+    fi
+
+    confirm "Save this profile?" || exit 0
+
+    # Write using git config (Safe & Robust)
+    write_config "$profile_file" "user.name" "$new_name"
+    write_config "$profile_file" "user.email" "$new_email"
+    write_config "$profile_file" "user.signingkey" "$new_key"
+    write_config "$profile_file" "gpg.format" "$new_format"
+
+    success "Profile '$profile' saved."
+}
+
+cmd_use() {
+    local profile="$1"
+    [[ -n "$profile" ]] || die "Profile name required."
+    validate_profile_name "$profile"
+
+    local profile_file
+    profile_file=$(get_profile_path "$profile")
+
+    if [[ ! -f "$profile_file" ]]; then
+        die "Profile '$profile' does not exist."
+    fi
+
+    ensure_git_repo
+
+    local name email key format
+    name=$(read_config "$profile_file" "user.name")
+    email=$(read_config "$profile_file" "user.email")
+    key=$(read_config "$profile_file" "user.signingkey")
+    format=$(read_config "$profile_file" "gpg.format")
+
+    printf "Applying profile '%s%s%s' to current repository...\n" "$BOLD" "$profile" "$RESET"
+    printf "  Name:  %s\n" "$name"
+    printf "  Email: %s\n" "$email"
+    [[ -n "$key" ]] && printf "  Key:   %s (%s)\n" "$key" "$format"
+
+    confirm "Apply identity?" || exit 0
+
+    # Apply to local repo
+    "$GIT_EXEC" config user.name "$name"
+    "$GIT_EXEC" config user.email "$email"
+
+    if [[ -n "$key" ]]; then
+        "$GIT_EXEC" config user.signingkey "$key"
+        "$GIT_EXEC" config gpg.format "$format"
+        "$GIT_EXEC" config commit.gpgsign true
+    else
+        "$GIT_EXEC" config --unset user.signingkey >/dev/null 2>&1 || true
+        "$GIT_EXEC" config --unset gpg.format >/dev/null 2>&1 || true
+        "$GIT_EXEC" config commit.gpgsign false
+    fi
+
+    success "Identity applied successfully."
+}
+
+cmd_list() {
+    if [[ ! -d "$STORE_DIR" ]]; then
+        info "No profiles found."
+        exit 0
+    fi
+
+    # Get current local config for comparison
+    local current_email
+    if "$GIT_EXEC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        current_email=$("$GIT_EXEC" config user.email || true)
+    fi
+
+    printf "%sAvailable Profiles:%s\n" "$BOLD" "$RESET"
+
+    # Loop files securely
+    while IFS= read -r -d '' file; do
+        local filename
+        filename=$(basename "$file")
+        local profile_name="${filename}" # Config files handled by git don't strictly need extensions, but we use directory listing
+
+        # We previously used just the filename.
+        # Since 'git config' creates clean files, we can just list them.
+        local p_name
+        p_name=$(read_config "$file" "user.name")
+        local p_email
+        p_email=$(read_config "$file" "user.email")
+
+        local prefix="  "
+        local color="$RESET"
+
+        if [[ "${current_email:-}" == "$p_email" ]]; then
+            prefix="* "
+            color="$GREEN"
+        fi
+
+        printf "%s%s%s%s <%s>\n" "$color" "$prefix" "$profile_name" "$RESET" "$p_email"
+    done < <(find "$STORE_DIR" -type f -not -name '.*' -print0 2>/dev/null | sort -z)
+}
+
+usage() {
+    cat <<EOF
+${BOLD}git-id${RESET} - Git Identity Manager
+
+${BOLD}USAGE:${RESET}
+  git-id set <profile>   Create or update a profile
+  git-id use <profile>   Apply profile to current repository
+  git-id list            List available profiles
+
+${BOLD}DETAILS:${RESET}
+  Profiles are stored in: $STORE_DIR
+  Supports Name, Email, and Signing Keys (GPG/SSH).
+EOF
+}
+
+# --- Main ---------------------------------------------------------------------
+
+check_deps
+
+cmd=${1:-}
+arg=${2:-}
+
+case "$cmd" in
+    set)  cmd_set "$arg" ;;
+    use)  cmd_use "$arg" ;;
+    list) cmd_list ;;
+    -h|--help) usage ;;
+    *)
+        if [[ -z "$cmd" ]]; then
+            usage
+            exit 1
+        else
+            die "Unknown command: $cmd"
+        fi
+        ;;
+esac
