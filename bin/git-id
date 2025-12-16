@@ -5,7 +5,7 @@
 #                 Uses git-config storage backend for safety.
 # Author        : munterfi <info@munterfinger.ch>
 # Date          : 2025-12-16
-# Version       : 2.2.0
+# Version       : 2.3.0
 # Usage         : git-id <command> [args] [--global]
 #===============================================================================
 
@@ -23,12 +23,12 @@ if [[ -t 1 ]]; then
     readonly GREEN=$(tput setaf 2)
     readonly YELLOW=$(tput setaf 3)
     readonly RED=$(tput setaf 1)
-    readonly GREY=$(tput setaf 8)
     readonly MAGENTA=$(tput setaf 5)
+    readonly GREY=$(tput setaf 8)
     readonly BOLD=$(tput bold)
     readonly RESET=$(tput sgr0)
 else
-    readonly BLUE="" GREEN="" YELLOW="" RED="" GREY="" MAGENTA="" BOLD="" RESET=""
+    readonly BLUE="" GREEN="" YELLOW="" RED="" MAGENTA="" GREY="" BOLD="" RESET=""
 fi
 
 # --- Helpers ------------------------------------------------------------------
@@ -148,7 +148,7 @@ cmd_set() {
 
 cmd_use() {
     local profile="$1"
-    local scope_flag="${2:-}" # Optional: --global
+    local scope_flag="${2:-}"
 
     [[ -n "$profile" ]] || die "Profile name required."
     validate_profile_name "$profile"
@@ -163,12 +163,10 @@ cmd_use() {
     local git_scope="--local"
     local scope_desc="current repository"
 
-    # Handle Global Flag
     if [[ "$scope_flag" == "--global" ]]; then
         git_scope="--global"
         scope_desc="global user config"
     else
-        # Only check for repo if we are strictly in local mode
         ensure_git_repo
     fi
 
@@ -185,7 +183,6 @@ cmd_use() {
 
     confirm "Apply identity?" || exit 0
 
-    # Apply configuration
     "$GIT_EXEC" config "$git_scope" user.name "$name"
     "$GIT_EXEC" config "$git_scope" user.email "$email"
 
@@ -203,7 +200,7 @@ cmd_use() {
 }
 
 cmd_get() {
-    local scope_flag="${1:-}" # Optional: --global
+    local scope_flag="${1:-}"
     local name email key format source_label
 
     local git_opts=()
@@ -213,11 +210,10 @@ cmd_get() {
         source_label="${MAGENTA}(global config)${RESET}"
     else
         ensure_git_repo
-        # Determine source label for display
         if "$GIT_EXEC" config --local --get user.email >/dev/null 2>&1; then
             source_label="${GREEN}(local override)${RESET}"
         else
-            source_label="${GREY}(global default)${RESET}"
+            source_label="${MAGENTA}(global default)${RESET}"
         fi
     fi
 
@@ -270,13 +266,14 @@ cmd_list() {
         exit 0
     fi
 
-    # Get current (resolved) email for highlighting
-    local current_email
+    # 1. Fetch Global Email
+    local global_email
+    global_email=$("$GIT_EXEC" config --global user.email || true)
+
+    # 2. Fetch Local Email (only if inside repo)
+    local local_email=""
     if "$GIT_EXEC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        current_email=$("$GIT_EXEC" config user.email || true)
-    else
-        # If not in a repo, check global email
-        current_email=$("$GIT_EXEC" config --global user.email || true)
+        local_email=$("$GIT_EXEC" config --local user.email || true)
     fi
 
     printf "%sAvailable Profiles:%s\n" "$BOLD" "$RESET"
@@ -294,13 +291,38 @@ cmd_list() {
         local prefix="  "
         local color="$RESET"
 
-        if [[ "${current_email:-}" == "$p_email" ]]; then
+        # LOGIC:
+        # 1. Does it match Local? (Effective Active) -> Green *
+        # 2. Does it match Global?
+        #    a. If Local is NOT set -> Magenta * (Effective Active via Global)
+        #    b. If Local IS set     -> Grey + (Shadowed Global)
+
+        local is_global=0
+        local is_local=0
+
+        [[ "$p_email" == "$global_email" ]] && is_global=1
+        [[ -n "$local_email" && "$p_email" == "$local_email" ]] && is_local=1
+
+        if (( is_local )); then
             prefix="* "
             color="$GREEN"
+        elif (( is_global )); then
+            if [[ -n "$local_email" ]]; then
+                # We have a local override, so Global is shadowed
+                prefix="+ "
+                color="$GREY"
+            else
+                # No local override, so Global is active
+                prefix="* "
+                color="$MAGENTA"
+            fi
         fi
 
         printf "%s%s%s%s %s <%s>\n" "$color" "$prefix" "$profile_name" "$RESET" "$p_name" "$p_email"
     done < <(find "$STORE_DIR" -type f -not -name '.*' -print0 2>/dev/null | sort -z)
+
+    # Legend for clarity (optional, kept minimal)
+    # printf "\n%sLegend: %s* Local Active  %s* Global Active  %s+ Global Shadowed%s\n" "$GREY" "$GREEN" "$MAGENTA" "$MAGENTA" "$RESET"
 }
 
 usage() {
@@ -308,16 +330,16 @@ usage() {
 ${BOLD}git-id${RESET} - Git Identity Manager
 
 ${BOLD}USAGE:${RESET}
-  git-id get [--global]           Show identity (current repo or global)
-  git-id use <profile> [--global] Apply profile (to current repo or global)
-  git-id set <profile>            Create or update a profile
-  git-id delete <name>            Delete a profile
-  git-id list                     List available profiles
+  git-id get [--global]           Show identity
+  git-id use <profile> [--global] Apply profile
+  git-id set <profile>            Create/Update profile
+  git-id delete <name>            Delete profile
+  git-id list                     List profiles
 
-${BOLD}DETAILS:${RESET}
-  Profiles are stored in: $STORE_DIR
-  Supports Name, Email, and Signing Keys (GPG/SSH).
-  Using --global allows setting your default user config.
+${BOLD}ICONS:${RESET}
+  ${GREEN}*${RESET} Active (Local Override)
+  ${MAGENTA}*${RESET} Active (Global Default)
+  ${GREY}+${RESET} Inactive (Global Default, shadowed by local)
 EOF
 }
 
@@ -330,7 +352,7 @@ arg=${2:-}
 flag=${3:-}
 
 case "$cmd" in
-    get)    cmd_get "$arg" ;;  # arg is optional flag here
+    get)    cmd_get "$arg" ;;
     set)    cmd_set "$arg" ;;
     use)    cmd_use "$arg" "$flag" ;;
     delete) cmd_delete "$arg" ;;
