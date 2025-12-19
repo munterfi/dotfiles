@@ -1,0 +1,368 @@
+#!/usr/bin/env bash
+#===============================================================================
+# Name          : git-id
+# Description   : Git identity manager, uses git-config storage backend.
+# Author        : munterfi <info@munterfinger.ch>
+# Date          : 2025-12-16
+# Version       : 2.3.0
+# Usage         : git-id <command> [args] [--global]
+#===============================================================================
+
+# --- Strict Mode ---
+set -Eeuo pipefail
+
+# --- Configuration ---
+readonly XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+readonly STORE_DIR="$XDG_CONFIG_HOME/git-id/profiles"
+readonly GIT_EXEC="git"
+
+# --- Styling ---
+if [[ -t 1 ]]; then
+    readonly BLUE=$(tput setaf 4)
+    readonly GREEN=$(tput setaf 2)
+    readonly YELLOW=$(tput setaf 3)
+    readonly RED=$(tput setaf 1)
+    readonly MAGENTA=$(tput setaf 5)
+    readonly GREY=$(tput setaf 8)
+    readonly BOLD=$(tput bold)
+    readonly RESET=$(tput sgr0)
+else
+    readonly BLUE="" GREEN="" YELLOW="" RED="" MAGENTA="" GREY="" BOLD="" RESET=""
+fi
+
+# --- Helpers ------------------------------------------------------------------
+
+die() {
+    printf "%s[error]%s %s\n" "$RED" "$RESET" "$*" >&2
+    exit 1
+}
+
+info() {
+    printf "%s[info]%s %s\n" "$BLUE" "$RESET" "$*"
+}
+
+success() {
+    printf "%s[success]%s %s\n" "$GREEN" "$RESET" "$*"
+}
+
+check_deps() {
+    if ! command -v "$GIT_EXEC" >/dev/null 2>&1; then
+        die "Git is required but not installed."
+    fi
+}
+
+validate_profile_name() {
+    local name="$1"
+    if [[ ! "$name" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+        die "Invalid profile name: '$name'. Use alphanumeric, dashes, or underscores."
+    fi
+}
+
+get_profile_path() {
+    echo "$STORE_DIR/$1"
+}
+
+ensure_git_repo() {
+    "$GIT_EXEC" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
+        || die "Not inside a git repository."
+}
+
+confirm() {
+    local prompt="$1"
+    read -r -p "${prompt} [y/N] " reply
+    [[ "$reply" =~ ^[Yy]$ ]]
+}
+
+# --- Core Logic ---------------------------------------------------------------
+
+read_config() {
+    local profile_file="$1"
+    local key="$2"
+    "$GIT_EXEC" config -f "$profile_file" --get "$key" || echo ""
+}
+
+write_config() {
+    local profile_file="$1"
+    local key="$2"
+    local value="$3"
+
+    if [[ -n "$value" ]]; then
+        "$GIT_EXEC" config -f "$profile_file" "$key" "$value"
+    else
+        "$GIT_EXEC" config -f "$profile_file" --unset "$key" >/dev/null 2>&1 || true
+    fi
+}
+
+cmd_set() {
+    local profile="$1"
+    [[ -n "$profile" ]] || die "Profile name required."
+    validate_profile_name "$profile"
+
+    mkdir -p "$STORE_DIR"
+    local profile_file
+    profile_file=$(get_profile_path "$profile")
+
+    local cur_name cur_email cur_key cur_format
+    cur_name=$(read_config "$profile_file" "user.name")
+    cur_email=$(read_config "$profile_file" "user.email")
+    cur_key=$(read_config "$profile_file" "user.signingkey")
+    cur_format=$(read_config "$profile_file" "gpg.format")
+
+    printf "%sConfiguring profile: %s%s\n" "$BOLD" "$profile" "$RESET"
+
+    read -r -p "Name [${cur_name}]: " input_name
+    local new_name="${input_name:-$cur_name}"
+    [[ -n "$new_name" ]] || die "Name cannot be empty."
+
+    read -r -p "Email [${cur_email}]: " input_email
+    local new_email="${input_email:-$cur_email}"
+    [[ -n "$new_email" ]] || die "Email cannot be empty."
+
+    read -r -p "Signing Key (optional) [${cur_key}]: " input_key
+    local new_key="${input_key:-$cur_key}"
+
+    local new_format="$cur_format"
+    if [[ -n "$new_key" ]]; then
+         read -r -p "Key Format (openpgp/ssh/x509) [${cur_format:-openpgp}]: " input_format
+         new_format="${input_format:-${cur_format:-openpgp}}"
+    fi
+
+    printf "\n%sSummary:%s\n" "$BOLD" "$RESET"
+    printf "  Name:   %s%s%s\n" "$YELLOW" "$new_name" "$RESET"
+    printf "  Email:  %s%s%s\n" "$YELLOW" "$new_email" "$RESET"
+    if [[ -n "$new_key" ]]; then
+        printf "  Key:    %s\n" "$new_key"
+        printf "  Format: %s\n" "$new_format"
+    fi
+
+    confirm "Save this profile?" || exit 0
+
+    write_config "$profile_file" "user.name" "$new_name"
+    write_config "$profile_file" "user.email" "$new_email"
+    write_config "$profile_file" "user.signingkey" "$new_key"
+    write_config "$profile_file" "gpg.format" "$new_format"
+
+    success "Profile '$profile' saved."
+}
+
+cmd_use() {
+    local profile="$1"
+    local scope_flag="${2:-}"
+
+    [[ -n "$profile" ]] || die "Profile name required."
+    validate_profile_name "$profile"
+
+    local profile_file
+    profile_file=$(get_profile_path "$profile")
+
+    if [[ ! -f "$profile_file" ]]; then
+        die "Profile '$profile' does not exist."
+    fi
+
+    local git_scope="--local"
+    local scope_desc="current repository"
+
+    if [[ "$scope_flag" == "--global" ]]; then
+        git_scope="--global"
+        scope_desc="global user config"
+    else
+        ensure_git_repo
+    fi
+
+    local name email key format
+    name=$(read_config "$profile_file" "user.name")
+    email=$(read_config "$profile_file" "user.email")
+    key=$(read_config "$profile_file" "user.signingkey")
+    format=$(read_config "$profile_file" "gpg.format")
+
+    printf "Applying profile '%s%s%s' to %s...\n" "$BOLD" "$profile" "$RESET" "$scope_desc"
+    printf "  Name:  %s\n" "$name"
+    printf "  Email: %s\n" "$email"
+    [[ -n "$key" ]] && printf "  Key:   %s (%s)\n" "$key" "$format"
+
+    confirm "Apply identity?" || exit 0
+
+    "$GIT_EXEC" config "$git_scope" user.name "$name"
+    "$GIT_EXEC" config "$git_scope" user.email "$email"
+
+    if [[ -n "$key" ]]; then
+        "$GIT_EXEC" config "$git_scope" user.signingkey "$key"
+        "$GIT_EXEC" config "$git_scope" gpg.format "$format"
+        "$GIT_EXEC" config "$git_scope" commit.gpgsign true
+    else
+        "$GIT_EXEC" config "$git_scope" --unset user.signingkey >/dev/null 2>&1 || true
+        "$GIT_EXEC" config "$git_scope" --unset gpg.format >/dev/null 2>&1 || true
+        "$GIT_EXEC" config "$git_scope" commit.gpgsign false
+    fi
+
+    success "Identity applied ($git_scope)."
+}
+
+cmd_get() {
+    local scope_flag="${1:-}"
+    local name email key format source_label
+
+    local git_opts=()
+
+    if [[ "$scope_flag" == "--global" ]]; then
+        git_opts=("--global")
+        source_label="${MAGENTA}(global config)${RESET}"
+    else
+        ensure_git_repo
+        if "$GIT_EXEC" config --local --get user.email >/dev/null 2>&1; then
+            source_label="${GREEN}(local override)${RESET}"
+        else
+            source_label="${MAGENTA}(global default)${RESET}"
+        fi
+    fi
+
+    name=$("$GIT_EXEC" config "${git_opts[@]}" --get user.name || echo "N/A")
+    email=$("$GIT_EXEC" config "${git_opts[@]}" --get user.email || echo "N/A")
+    key=$("$GIT_EXEC" config "${git_opts[@]}" --get user.signingkey || echo "")
+    format=$("$GIT_EXEC" config "${git_opts[@]}" --get gpg.format || echo "")
+
+    printf "%sIdentity %s:%s\n" "$BOLD" "$source_label" "$RESET"
+    printf "  Name:   %s%s%s\n" "$YELLOW" "$name" "$RESET"
+    printf "  Email:  %s%s%s\n" "$YELLOW" "$email" "$RESET"
+
+    if [[ -n "$key" ]]; then
+        printf "  Key:    %s\n" "$key"
+        printf "  Format: %s\n" "$format"
+
+        local sign_status
+        sign_status=$("$GIT_EXEC" config "${git_opts[@]}" --get commit.gpgsign || echo "false")
+
+        if [[ "$sign_status" == "true" ]]; then
+             printf "  Sign:   %sEnabled%s\n" "$GREEN" "$RESET"
+        else
+             printf "  Sign:   %sDisabled%s\n" "$RED" "$RESET"
+        fi
+    fi
+}
+
+cmd_delete() {
+    local profile="$1"
+    [[ -n "$profile" ]] || die "Profile name required."
+    validate_profile_name "$profile"
+
+    local profile_file
+    profile_file=$(get_profile_path "$profile")
+
+    if [[ ! -f "$profile_file" ]]; then
+        die "Profile '$profile' not found."
+    fi
+
+    printf "Are you sure you want to delete profile '%s%s%s'?\n" "$BOLD" "$profile" "$RESET"
+    confirm "Delete permanently?" || exit 0
+
+    rm -f "$profile_file"
+    success "Profile '$profile' deleted."
+}
+
+cmd_list() {
+    if [[ ! -d "$STORE_DIR" ]]; then
+        info "No profiles found."
+        exit 0
+    fi
+
+    # 1. Fetch Global Email
+    local global_email
+    global_email=$("$GIT_EXEC" config --global user.email || true)
+
+    # 2. Fetch Local Email (only if inside repo)
+    local local_email=""
+    if "$GIT_EXEC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        local_email=$("$GIT_EXEC" config --local user.email || true)
+    fi
+
+    printf "%sAvailable Profiles:%s\n" "$BOLD" "$RESET"
+
+    while IFS= read -r -d '' file; do
+        local filename
+        filename=$(basename "$file")
+        local profile_name="${filename}"
+
+        local p_name
+        p_name=$(read_config "$file" "user.name")
+        local p_email
+        p_email=$(read_config "$file" "user.email")
+
+        local prefix="  "
+        local color="$RESET"
+
+        # LOGIC:
+        # 1. Does it match Local? (Effective Active) -> Green *
+        # 2. Does it match Global?
+        #    a. If Local is NOT set -> Magenta * (Effective Active via Global)
+        #    b. If Local IS set     -> Grey + (Shadowed Global)
+
+        local is_global=0
+        local is_local=0
+
+        [[ "$p_email" == "$global_email" ]] && is_global=1
+        [[ -n "$local_email" && "$p_email" == "$local_email" ]] && is_local=1
+
+        if (( is_local )); then
+            prefix="* "
+            color="$GREEN"
+        elif (( is_global )); then
+            if [[ -n "$local_email" ]]; then
+                # We have a local override, so Global is shadowed
+                prefix="+ "
+                color="$GREY"
+            else
+                # No local override, so Global is active
+                prefix="* "
+                color="$MAGENTA"
+            fi
+        fi
+
+        printf "%s%s%s%s %s <%s>\n" "$color" "$prefix" "$profile_name" "$RESET" "$p_name" "$p_email"
+    done < <(find "$STORE_DIR" -type f -not -name '.*' -print0 2>/dev/null | sort -z)
+
+    # Legend for clarity (optional, kept minimal)
+    # printf "\n%sLegend: %s* Local Active  %s* Global Active  %s+ Global Shadowed%s\n" "$GREY" "$GREEN" "$MAGENTA" "$MAGENTA" "$RESET"
+}
+
+usage() {
+    cat <<EOF
+${BOLD}git-id${RESET} - Git Identity Manager
+
+${BOLD}USAGE:${RESET}
+  git-id get [--global]           Show identity
+  git-id use <profile> [--global] Apply profile
+  git-id set <profile>            Create/Update profile
+  git-id delete <name>            Delete profile
+  git-id list                     List profiles
+
+${BOLD}ICONS:${RESET}
+  ${GREEN}*${RESET} Active (Local Override)
+  ${MAGENTA}*${RESET} Active (Global Default)
+  ${GREY}+${RESET} Inactive (Global Default, shadowed by local)
+EOF
+}
+
+# --- Main ---------------------------------------------------------------------
+
+check_deps
+
+cmd=${1:-}
+arg=${2:-}
+flag=${3:-}
+
+case "$cmd" in
+    get)    cmd_get "$arg" ;;
+    set)    cmd_set "$arg" ;;
+    use)    cmd_use "$arg" "$flag" ;;
+    delete) cmd_delete "$arg" ;;
+    list)   cmd_list ;;
+    -h|--help) usage ;;
+    *)
+        if [[ -z "$cmd" ]]; then
+            usage
+            exit 1
+        else
+            die "Unknown command: $cmd"
+        fi
+        ;;
+esac

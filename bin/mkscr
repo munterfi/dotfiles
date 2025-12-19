@@ -1,182 +1,156 @@
 #!/usr/bin/env bash
-# -----------------------------------------------------------------------------
-# Name          :mkscr
-# Description   :Create an executable script with header section in a chosen
-#                language. The associated interpreter is added to the shebang.
-#                After the creation of the file, the script is opened in Vim.
-#                Modified from <http://code.activestate.com/recipes/577862>.
-# Author        :Merlin Unterfinger <info@munterfinger.ch>
-# Date          :2020-05-17
-# Version       :0.2.0
-# Usage         :./mkscr or mkscr if located in ~/bin
-# Notes         :Vim has to be installed and requires Bash version > 4.0.0.
-# Bash          :5.0.17
-# =============================================================================
+#===============================================================================
+# Name          : mkscr
+# Description   : Interactively generates an executable script with a
+#                 standardized header, correct shebang, and version info.
+# Author        : munterfi <info@munterfinger.ch>
+# Date          : 2025-12-15
+# Version       : 3.1.0
+# Usage         : mkscr
+#===============================================================================
 
-_select_language() {
+# Exit immediately if a command exits with a non-zero status.
+set -e
 
-    # Language selection
-    printf "%s\n%s\n%s\n%s\n%s\n%s\n\n" \
-        "Select a language:" \
-        "1) Bash" \
-        "2) Julia" \
-        "3) Python" \
-        "4) R" \
-        "5) Zsh"
-    read -r selection
+# --- Configuration ---
+# Colors
+BLUE="$(tput setaf 4)"
+GREEN="$(tput setaf 2)"
+YELLOW="$(tput setaf 3)"
+RESET="$(tput sgr0)"
 
-    # Define corresponding file extension, interpeter and version
-    case $selection in
-    1)
-        lang=Bash
-        terp=bash
-        vers=${BASH_VERSION}
-        vers=${vers:0:6}
-        extn=.sh
-        ;;
-    2)
-        lang=Julia
-        terp=julia
-        vers=$(julia --version)
-        vers=${vers:14:5}
-        extn=.jl
-        ;;
-    3)
-        lang=Python
-        terp=python
-        vers=$(python --version)
-        vers=${vers:7:5}
-        extn=.py
-        ;;
-    4)
-        lang=R
-        terp=Rscript
-        vers=$(R --version)
-        vers=${vers:10:5} extn=.R
-        ;;
-    5)
-        lang=Zsh
-        terp=zsh
-        vers=$(zsh --version)
-        vers=${vers:4:5}
-        extn=.sh
-        ;;
-    *)
-        /usr/bin/clear
-        printf "%s\n%s\n\n" "I did not understand your selection." \
-            "Press <Ctrl-c> to quit."
-        _select_language
-        ;;
-    esac
+# Layout
+DIV_LINE_1="-----------------------------------------------------------------------------"
+DIV_LINE_2="============================================================================="
 
-    /usr/bin/clear
+# --- Language Definitions (Using Bash 4+ Associative Arrays) ---
+LANG_OPTIONS=("Bash" "Zsh" "Python" "R")
 
-}
+declare -A EXTENSIONS
+EXTENSIONS=(
+    ["Bash"]="sh"
+    ["Zsh"]="sh"
+    ["Python"]="py"
+    ["R"]="R"
+)
 
-_enter_title() {
+declare -A BINARIES
+BINARIES=(
+    ["Bash"]="bash"
+    ["Zsh"]="zsh"
+    ["Python"]="python3"
+    ["R"]="Rscript"
+)
 
-    # Get the user input
-    printf "%-$off_c%s\n" "Select a language:" "$lang script"
-    printf "%-$off_c" "Enter the script name:"
-    read -r title
+# --- Helper Functions ---
 
-    # Remove the spaces from the title if necessary
-    title=${title// /_}
+log_info()  { echo -e "\n${BLUE}ℹ${RESET} $*"; }
+log_warn()  { echo -e "${YELLOW}⚠${RESET} $*"; }
 
-    # Convert uppercase to lowercase
-    title=${title,,}
-
-    # Check for blank input
-    if [ -z $title ]; then
-        /usr/bin/clear
-        printf "%s\n%s\n\n" "Blank input is not permitted." \
-            "Please try again."
-        _enter_title
+get_tool_version() {
+    local cmd="$1"
+    local version_string=""
+    if command -v "$cmd" &>/dev/null; then
+        # '|| true' ensures the pipeline succeeds even if grep finds no match
+        version_string=$("$cmd" --version 2>&1 | grep -oE '[0-9]+\.[0-9]+(\.[0-9]+)?' | head -n1 || true)
     fi
-
-    # Add extension to the end of the title if it is not there already
-    [ "${title: -3}" != $extn ] && title=${title}${extn}
-
-    # Check to see if the file exists already
-    if [ -e $title ]; then
-        /usr/bin/clear
-        printf "%s\n%s\n\n" "The script \"$title\" already exists." \
-            "Please select another file name."
-        _enter_title
-    fi
-
+    echo "${version_string:-Not Found}"
 }
 
-_enter_description() {
+# --- Main Logic ---
 
-    # Get the user input
-    printf "%-$off_c" "Enter a description:"
-    read -r dscrpt
+main() {
+    clear
+    echo -e "${BLUE}mkscr${RESET} :: Script Generator\n"
 
+    # 1. Select Language
+    echo "Select a language:"
+    PS3="> " # Prompt character for the select menu
+    local lang interpreter ext tool_ver
+
+    select opt in "${LANG_OPTIONS[@]}"; do
+        if [[ -n "$opt" ]]; then
+            lang="$opt"
+            interpreter="${BINARIES[$opt]}"
+            ext="${EXTENSIONS[$opt]}"
+            break
+        else
+            log_warn "Invalid selection. Please try again."
+        fi
+    done
+
+    tool_ver="$(get_tool_version "$interpreter")"
+    log_info "Selected $lang ($tool_ver)"
+    echo ""
+
+    # 2. Script Name (Robust Input)
+    local name_input filename
+    while true; do
+        printf "Enter script name (without extension): "
+        read -r name_input
+
+        # Sanitize using Bash 4+ parameter expansion
+        name_input="${name_input,,}" # lowercase
+        name_input="${name_input// /_}" # replace spaces with underscores
+
+        if [[ -z "$name_input" ]]; then
+            log_warn "Name cannot be empty."
+            continue
+        fi
+
+        filename="${name_input}.${ext}"
+
+        if [[ -e "$filename" ]]; then
+            log_warn "File '$filename' already exists. Choose another."
+        else
+            break
+        fi
+    done
+
+    # 3. Metadata Inputs (with defaults)
+    local description author version current_date
+
+    local git_user
+    git_user="$(git config user.name 2>/dev/null) <$(git config user.email 2>/dev/null)>"
+    [[ "$git_user" == " <>" ]] && git_user="$(whoami)"
+
+    echo ""
+    printf "Description: "
+    read -r description
+
+    printf "Author [%s]: " "$git_user"
+    read -r author_input
+    author="${author_input:-$git_user}"
+
+    printf "Version [0.1.0]: "
+    read -r version_input
+    version="${version_input:-0.1.0}"
+
+    current_date="$(date +%Y-%m-%d)"
+
+    # 4. Generate File Content
+    cat <<EOF > "$filename"
+#!/usr/bin/env $interpreter
+# $DIV_LINE_1
+# Name          : $filename
+# Description   : $description
+# Author        : $author
+# Date          : $current_date
+# Version       : $version
+# Usage         : ./$filename
+# Notes         :
+# $lang          : $tool_ver
+# $DIV_LINE_2
+
+# Your code here...
+
+EOF
+
+    # 5. Finalize and Open
+    chmod +x "$filename"
+    log_info "Created executable: $filename"
+
+    ${EDITOR:-vim} +15 "$filename"
 }
 
-_enter_author() {
-
-    # Set default name of git config (local, if available)
-    name="$(git config user.name) <$(git config user.email)>"
-    printf "%-$off_c" "Enter the author name:"
-    read -re -i "$name" name
-
-}
-
-_enter_version() {
-
-    # Set a default version
-    vnum="0.1.0"
-    printf "%-$off_c" "Enter the version number:"
-    read -re -i "$vnum" vnum
-
-}
-
-_write_file() {
-
-    # Format the output and write it to a file
-    printf "%-16s\n\
-%-80s\n\
-%-16s%-8s\n\
-%-16s%-8s\n\
-%-16s%-8s\n\
-%-16s%-8s\n\
-%-16s%-8s\n\
-%-16s%-8s\n\
-%-16s%-8s\n\
-%-16s%-8s\n\
-%s\n\n\n" "#!/usr/bin/env $terp" "# -$div_1$div_1" '# Name' ":$title" \
-        '# Description' ":$dscrpt" '# Author' ":$name" '# Date' ":$today" \
-        '# Version' ":$vnum" '# Usage' ":./$title" '# Notes' ':' "# $lang" \
-        ":$vers" "# =$div_2$div_2" >$title
-
-    # Make the file executable
-    chmod +x $title
-
-}
-
-_open_file() {
-
-    /usr/bin/clear
-
-    # Open the file with the cursor on the correct line
-    vim +13 $title
-
-}
-
-# Variables
-today=$(date +%Y-%m-%d)                        # Current date (JJJJ-MM-TT)
-off_c=30s                                      # Offset for cursor position
-div_1="--------------------------------------" # First division line
-div_2="======================================" # Second division line
-
-# Run CLI
-/usr/bin/clear
-_select_language
-_enter_title
-_enter_description
-_enter_author
-_enter_version
-_write_file
-_open_file
+main
