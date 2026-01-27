@@ -11,6 +11,7 @@ brew "jq"
 brew "coreutils"
 brew "cmake"
 brew "btop"
+brew "watch"
 
 # --- Shell Plugins ---
 brew "zsh-autosuggestions"
@@ -39,6 +40,7 @@ brew "docker-compose"
 
 # --- Cloud & DevOps ---
 brew "azure-cli"
+brew "awscli"
 brew "openshift-cli"
 brew "kubernetes-cli"
 brew "helm"
