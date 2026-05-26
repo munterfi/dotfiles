@@ -190,6 +190,7 @@ setup_shell() {
     ensure_line 'source ~/.zsh/aliases.zsh' "$zshrc"
     ensure_line '# Functions' "$zshrc"
     ensure_line 'source ~/.zsh/functions.zsh' "$zshrc"
+    ensure_line '[[ -f ~/.zsh/local.zsh ]] && source ~/.zsh/local.zsh' "$zshrc"
 
     # 2. Autocompletion
     ensure_line "FPATH=${brew_prefix}/share/zsh/site-functions:\${FPATH}" "$zshrc"

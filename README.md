@@ -40,6 +40,11 @@ running the `colima start` command.
 All CLI tools, languages, and GUI applications are declared in the `Brewfile`. The environment is customized by editing
 this file to add or remove items. Re-running the bootstrap script will apply the changes.
 
+## Local Overrides
+
+Machine-specific aliases, exports, or settings that should not be committed can be placed in `.zsh/local.zsh`. This
+file is listed in `.gitignore` and sourced automatically if it exists.
+
 ## Scripts
 
 This repository contains several helper scripts located in the `bin` directory, which are automatically added to the
