@@ -218,9 +218,9 @@ setup_shell() {
 #===============================================================================
 setup_langs() {
     # --- Rust ---
-    if [ ! -f "$HOME/.cargo/bin/cargo" ]; then
+    if ! rustup toolchain list | grep -q "stable"; then
         info "Initializing Rust..."
-        rustup-init -y --no-modify-path
+        rustup default stable
     fi
 
     # --- Node ---
