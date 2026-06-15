@@ -216,7 +216,23 @@ setup_shell() {
 }
 
 #===============================================================================
-# 6. Language Toolchains
+# 6. Vim Configuration
+#===============================================================================
+setup_vimrc() {
+    local vimrc="$HOME/.vimrc"
+    info "Configuring Vim..."
+    ensure_line 'set number' "$vimrc"           # Show absolute line numbers
+    ensure_line 'set relativenumber' "$vimrc"   # Show relative line numbers
+    ensure_line 'syntax on' "$vimrc"            # Enable syntax highlighting
+    ensure_line 'set hlsearch' "$vimrc"         # Highlight search results
+    ensure_line 'set incsearch' "$vimrc"        # Incremental search
+    ensure_line 'set showmatch' "$vimrc"        # Highlight matching parentheses
+    
+    success "Vim configured"
+}
+
+#===============================================================================
+# 7. Language Toolchains
 #===============================================================================
 setup_langs() {
     # --- Rust ---
@@ -258,6 +274,7 @@ main() {
     setup_ssh
     setup_docker
     setup_shell    # Adds source lines and PATH to zshrc/zshenv
+    setup_vimrc    # Basic Vim settings
     setup_langs
 
     success "Bootstrap Complete! Restart your terminal."
