@@ -98,8 +98,12 @@ install_deps() {
         exit 1
     fi
 
-    # --cleanup: Uninstall packages NOT in the Brewfile
-    brew bundle --cleanup
+    # 1. Install missing dependencies
+    brew bundle
+    
+    # 2. Uninstall packages NOT listed in the Brewfile
+    # We use --force to actually perform the uninstallation
+    brew bundle cleanup --force
 
     success "Dependencies synced"
 }
