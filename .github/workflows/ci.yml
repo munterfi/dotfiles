@@ -17,13 +17,14 @@ jobs:
       - name: Bootstrap
         env:
           TERM: xterm-256color
+          HOMEBREW_NO_INSTALL_CASKS: "1"
         run: |
           # create dummy files to skip interactive steps (SSH/Colima)
           mkdir -p ~/.ssh ~/.colima/default
           touch ~/.ssh/id_ed25519 ~/.colima/default/colima.yaml Brewfile
           
           # trust third-party taps required by Brewfile
-          brew trust --formula aws/tap
+          brew trust --tap aws/tap
           
           # run bootstrap script
           ./bootstrap.sh
