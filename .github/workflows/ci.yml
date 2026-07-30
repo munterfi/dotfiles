@@ -22,6 +22,9 @@ jobs:
           mkdir -p ~/.ssh ~/.colima/default
           touch ~/.ssh/id_ed25519 ~/.colima/default/colima.yaml Brewfile
           
+          # trust third-party taps required by Brewfile
+          brew trust --formula aws/tap
+          
           # run bootstrap script
           ./bootstrap.sh
 
