@@ -47,6 +47,7 @@ brew "openshift-cli"
 brew "kubernetes-cli"
 brew "helm"
 brew "kcat"
+brew "gh"
 
 # --- GUI Apps ---
 cask "iterm2"
