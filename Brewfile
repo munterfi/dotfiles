@@ -11,6 +11,7 @@ brew "bat"
 brew "eza"
 brew "ripgrep"
 brew "jq"
+brew "shellcheck"
 brew "coreutils"
 brew "cmake"
 brew "btop"
@@ -83,4 +84,6 @@ cask "xquartz"
 # --- maptic ---
 # Fully qualified on purpose: the bare token "mounty" is Mounty for NTFS in
 # homebrew/cask, a different app.
-cask "maptic/tap/mounty"
+# no_quarantine: our own releases are ad-hoc signed, not notarized, so Gatekeeper
+# would block every install until Mounty ships with a Developer ID.
+cask "maptic/tap/mounty", args: { no_quarantine: true }
