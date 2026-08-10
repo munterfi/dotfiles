@@ -84,6 +84,7 @@ cask "xquartz"
 # --- maptic ---
 # Fully qualified on purpose: the bare token "mounty" is Mounty for NTFS in
 # homebrew/cask, a different app.
-# no_quarantine: our own releases are ad-hoc signed, not notarized, so Gatekeeper
-# would block every install until Mounty ships with a Developer ID.
-cask "maptic/tap/mounty", args: { no_quarantine: true }
+# Releases are ad-hoc signed, so the first launch needs one manual approval in
+# System Settings > Privacy & Security. Homebrew 6 carries that approval into
+# later upgrades; it no longer supports --no-quarantine.
+cask "maptic/tap/mounty"
