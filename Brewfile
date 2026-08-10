@@ -82,8 +82,7 @@ cask "keystore-explorer"
 cask "xquartz"
 
 # --- maptic ---
-# Fully qualified on purpose: the bare token "mounty" is Mounty for NTFS in
-# homebrew/cask, a different app.
+# Fully qualified on purpose: the bare "mounty" token resolves elsewhere.
 # Releases are ad-hoc signed, so the first launch needs one manual approval in
 # System Settings > Privacy & Security. Homebrew 6 carries that approval into
 # later upgrades; it no longer supports --no-quarantine.
