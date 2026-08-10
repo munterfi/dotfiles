@@ -1,3 +1,6 @@
+# --- Taps ---
+tap "maptic/tap"
+
 # --- Shell ---
 brew "git"
 brew "bash"
@@ -76,3 +79,6 @@ cask "r-app"
 cask "rstudio"
 cask "keystore-explorer"
 cask "xquartz"
+
+# --- maptic ---
+cask "mounty"

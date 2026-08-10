@@ -25,6 +25,7 @@ jobs:
           
           # trust third-party taps required by Brewfile
           brew trust --tap aws/tap
+          brew trust --tap maptic/tap
           
           # run bootstrap script
           ./bootstrap.sh
