@@ -81,4 +81,6 @@ cask "keystore-explorer"
 cask "xquartz"
 
 # --- maptic ---
-cask "mounty"
+# Fully qualified on purpose: the bare token "mounty" is Mounty for NTFS in
+# homebrew/cask, a different app.
+cask "maptic/tap/mounty"

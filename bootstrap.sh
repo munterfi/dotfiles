@@ -98,10 +98,16 @@ install_deps() {
         exit 1
     fi
 
-    # 1. Install missing dependencies
+    # 1. Trust the third-party taps the Brewfile declares. Homebrew gates them
+    #    behind a prompt that would stall an unattended run.
+    grep -E '^tap "' Brewfile | sed -E 's/^tap "([^"]+)".*/\1/' | while read -r tap; do
+        brew trust --tap "${tap}"
+    done
+
+    # 2. Install missing dependencies
     brew bundle
     
-    # 2. Uninstall packages NOT listed in the Brewfile
+    # 3. Uninstall packages NOT listed in the Brewfile
     # We use --force to actually perform the uninstallation
     brew bundle cleanup --force
 
